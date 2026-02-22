@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>The Kelly Criterion | Aastha Jain</title>
+    <meta name="author" content="Aastha Jain">
+    <meta name="description" content="How information theory tells you how much to bet — the most elegant formula in finance that most people get wrong.">
+    <link rel="stylesheet" href="../assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdbootstrap@4.20.0/css/mdb.min.css"
+        integrity="sha256-jpjYvU3G3N6nrrBwXJoVEYI/0zw8htfFnhT9ljN3JJw=" crossorigin="anonymous">
+    <link rel="stylesheet" href="../assets/css/academicons.min.css">
+    <link rel="stylesheet" type="text/css"
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,700;0,800;1,400&display=swap">
+    <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✦</text></svg>">
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Light mode (default) */
+        :root {
+            --bg: #faf7f5; --surface: #f0ebe6; --card-bg: #ffffff;
+            --rose: #d4537a; --rose-light: #e879a0; --lavender: #8b6fc0; --mint: #2d9d6e;
+            --gold: #c9a12c;
+            --text-primary: #1a1520; --text-secondary: #5a5068; --text-muted: #8a8298;
+            --border: rgba(212, 83, 122, 0.15);
+            --navbar-bg: rgba(250, 247, 245, 0.88);
+        }
+        /* Dark mode */
+        html[data-theme="dark"] {
+            --bg: #0e0c11; --surface: #15121c; --card-bg: #1c1827;
+            --rose: #e879a0; --rose-light: #f5a3be; --lavender: #c4b5fd; --mint: #6ee7b7;
+            --gold: #f5c563;
+            --text-primary: #f0ece5; --text-secondary: #a8a0b5; --text-muted: #6b6580;
+            --border: rgba(232, 121, 160, 0.12);
+            --navbar-bg: rgba(14, 12, 17, 0.85);
+        }
+        * { box-sizing: border-box; }
+        body {
+            background: var(--bg) !important; color: var(--text-primary) !important;
+            font-family: 'DM Sans', sans-serif; padding: 0 !important;
+            -webkit-font-smoothing: antialiased;
+        }
+        .navbar {
+            background: var(--navbar-bg) !important;
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border-bottom: 1px solid var(--border) !important; box-shadow: none !important;
+        }
+        .navbar .nav-link, .navbar .navbar-brand { color: var(--text-primary) !important; font-family: 'DM Sans', sans-serif; }
+        .navbar .nav-link:hover { color: var(--rose) !important; text-decoration: none; }
+        .navbar .nav-item.active .nav-link { color: var(--rose) !important; font-weight: 600; }
+        .navbar-brand .font-weight-bold { font-weight: 700 !important; }
+        .icon-bar { background-color: var(--text-secondary) !important; }
+        #light-toggle { color: var(--text-muted); border: 0; background: inherit; padding: 0; }
+        #light-toggle:hover { color: var(--rose); }
+        p, h1, h2, h3, h4, h5, h6, em, div, li, span, strong { color: inherit; }
+
+        .post-page { max-width: 700px; margin: 0 auto; padding: 120px 24px 80px; }
+        .post-page .post-meta-bar {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+            color: var(--text-muted); margin-bottom: 16px;
+            display: flex; align-items: center; gap: 12px;
+        }
+        .post-page .post-meta-bar a { color: var(--rose) !important; text-decoration: none !important; }
+        .post-page .post-meta-bar a:hover { color: var(--lavender) !important; }
+        .post-page h1.post-title {
+            font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 800;
+            color: var(--text-primary); margin-bottom: 12px; line-height: 1.3;
+        }
+        .post-subtitle {
+            font-size: 1.05rem; color: var(--text-secondary); margin-bottom: 32px;
+            font-style: italic; line-height: 1.6;
+        }
+        .post-body { font-size: 1.02rem; line-height: 1.8; color: var(--text-secondary); }
+        .post-body h2 {
+            font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 700;
+            color: var(--text-primary) !important; margin-top: 2.8rem; margin-bottom: 1rem;
+            padding-bottom: 8px; border-bottom: 1px solid var(--border);
+        }
+        .post-body h4 { font-size: 1.1rem; font-weight: 700; color: var(--text-primary) !important; margin-top: 2rem; margin-bottom: 0.8rem; }
+        .post-body p { margin-bottom: 1.2rem; color: var(--text-secondary) !important; }
+        .post-body strong { color: var(--text-primary) !important; font-weight: 600; }
+        .post-body a { color: var(--rose) !important; text-decoration: none; border-bottom: 1px dashed rgba(232,121,160,0.35); }
+        .post-body a:hover { color: var(--lavender) !important; border-bottom-color: var(--lavender); }
+        .post-body blockquote {
+            border-left: 3px solid var(--rose); background: rgba(232,121,160,0.05);
+            border-radius: 0 10px 10px 0; padding: 16px 20px; margin: 1.5rem 0;
+        }
+        .post-body blockquote p { color: var(--text-primary) !important; font-style: italic; margin-bottom: 0; }
+        .post-body ul, .post-body ol { padding-left: 1.5rem; }
+        .post-body li { color: var(--text-secondary) !important; margin-bottom: 0.5rem; }
+        .post-body hr { border-top: 1px solid var(--border) !important; margin: 2rem 0; }
+
+        /* Math/formula boxes */
+        .formula-box {
+            background: var(--card-bg); border: 1px solid var(--border);
+            border-radius: 14px; padding: 24px 28px; margin: 1.5rem 0;
+            text-align: center; position: relative;
+        }
+        .formula-box .formula-label {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.65rem;
+            color: var(--rose); text-transform: uppercase; letter-spacing: 0.12em;
+            margin-bottom: 14px; text-align: left;
+        }
+        .formula-box .formula {
+            font-family: 'JetBrains Mono', monospace; font-size: 1.3rem;
+            color: var(--text-primary); letter-spacing: 0.02em;
+            margin-bottom: 12px;
+        }
+        .formula-box .formula-note {
+            font-size: 0.82rem; color: var(--text-muted); text-align: left;
+            line-height: 1.7;
+        }
+
+        /* Callout box */
+        .callout-box {
+            background: var(--card-bg); border: 1px solid var(--border);
+            border-radius: 14px; padding: 20px 24px; margin: 1.5rem 0;
+        }
+        .callout-box .callout-title {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+            color: var(--rose); text-transform: uppercase; letter-spacing: 0.1em;
+            margin-bottom: 10px;
+        }
+        .callout-box p { font-size: 0.92rem; }
+        .callout-box p:last-child { margin-bottom: 0; }
+
+        /* Example boxes */
+        .example-box {
+            background: linear-gradient(135deg, rgba(232,121,160,0.04) 0%, rgba(196,181,253,0.04) 100%);
+            border: 1px solid var(--border); border-radius: 14px;
+            padding: 20px 24px; margin: 1.5rem 0;
+        }
+        .example-box .example-title {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+            color: var(--lavender); text-transform: uppercase; letter-spacing: 0.1em;
+            margin-bottom: 10px;
+        }
+        .example-box p { font-size: 0.92rem; }
+        .example-box p:last-child { margin-bottom: 0; }
+
+        /* Interactive bet sizer */
+        .bet-sizer {
+            background: var(--card-bg); border: 1px solid var(--border);
+            border-radius: 18px; padding: 28px; margin: 2rem 0;
+        }
+        .bet-sizer .sizer-title {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+            color: var(--rose); text-transform: uppercase; letter-spacing: 0.12em;
+            margin-bottom: 18px;
+        }
+        .slider-group { margin-bottom: 18px; }
+        .slider-group label {
+            font-size: 0.88rem; color: var(--text-secondary);
+            display: flex; justify-content: space-between; margin-bottom: 6px;
+        }
+        .slider-group label span { color: var(--rose); font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+        .slider-group input[type="range"] {
+            width: 100%; -webkit-appearance: none; height: 4px;
+            background: var(--border); border-radius: 2px; outline: none;
+        }
+        .slider-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 16px; height: 16px;
+            border-radius: 50%; background: var(--rose); cursor: pointer;
+        }
+        .sizer-results {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px;
+        }
+        .sizer-result {
+            background: rgba(232,121,160,0.04); border: 1px solid var(--border);
+            border-radius: 10px; padding: 14px; text-align: center;
+        }
+        .sizer-result .result-label {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.62rem;
+            color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em;
+            margin-bottom: 4px;
+        }
+        .sizer-result .result-value {
+            font-family: 'JetBrains Mono', monospace; font-size: 1.2rem;
+            color: var(--text-primary); font-weight: 600;
+        }
+        .sizer-result .result-value.danger { color: var(--rose); }
+        .sizer-result .result-value.safe { color: var(--mint); }
+
+        /* Growth chart */
+        .growth-chart {
+            margin-top: 20px; padding: 16px;
+            background: rgba(232,121,160,0.03); border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+        .growth-chart canvas { width: 100%; height: 200px; }
+        .growth-chart .chart-legend {
+            display: flex; justify-content: center; gap: 18px; margin-top: 10px;
+            font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--text-muted);
+        }
+        .growth-chart .legend-dot {
+            display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px;
+        }
+
+        .custom-footer {
+            background: var(--surface); border-top: 1px solid var(--border);
+            padding: 36px 24px; text-align: center;
+        }
+        .custom-footer .footer-text { font-size: 0.78rem; color: var(--text-muted); }
+    </style>
+</head>
+<body class="fixed-top-nav">
+    <header>
+        <nav id="navbar" class="navbar navbar-light navbar-expand-sm fixed-top">
+            <div class="container" style="max-width: 960px;">
+                <a class="navbar-brand title" href="../" style="font-family: 'DM Sans', sans-serif;">
+                    <span class="font-weight-bold">Aastha </span>Jain
+                </a>
+                <button class="navbar-toggler collapsed ml-auto" type="button" data-toggle="collapse" data-target="#navbarNav">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar top-bar"></span>
+                    <span class="icon-bar middle-bar"></span>
+                    <span class="icon-bar bottom-bar"></span>
+                </button>
+                <div class="collapse navbar-collapse text-right" id="navbarNav">
+                    <ul class="navbar-nav ml-auto flex-nowrap">
+                        <li class="nav-item"><a class="nav-link" href="../">about</a></li>
+                        <li class="nav-item active"><a class="nav-link" href="../blog/">writing<span class="sr-only">(current)</span></a></li>
+                        <li class="nav-item"><a class="nav-link" href="../publications/">research</a></li>
+                        <li class="toggle-container">
+                            <button id="light-toggle" title="Change theme">
+                                <i class="fa-solid fa-moon"></i><i class="fa-solid fa-sun"></i>
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="post-page">
+        <div class="post-meta-bar">
+            <a href="../blog/">← back to writing</a>
+            <span>·</span>
+            <span>February 2026</span>
+            <span>·</span>
+            <span>12 min read</span>
+        </div>
+
+        <h1 class="post-title">The Kelly Criterion: How Information Theory Tells You How Much to Bet</h1>
+        <p class="post-subtitle">The most elegant formula in finance connects three fields that seem to have nothing to do with each other — and most people who use it get it wrong.</p>
+
+        <div class="post-body">
+
+            <p>In 1956, a physicist at Bell Labs named <strong>John L. Kelly Jr.</strong> published a paper with a dry title: <em>"A New Interpretation of Information Rate."</em> It appeared in the Bell System Technical Journal, wedged between papers on signal processing and telephone switching circuits.</p>
+
+            <p>The paper nearly didn't get published. AT&T management worried it was about gambling. They weren't wrong — but they were missing the point. Kelly had discovered something far more fundamental: a mathematical law connecting <strong>the quality of your information</strong> to <strong>the rate at which you can grow wealth.</strong></p>
+
+            <p>That law, now known as the Kelly criterion, is arguably the most important formula in the history of quantitative finance. And yet, most people who've heard of it understand it only superficially — as a betting formula. The real story is about information, entropy, and the deep structure of compound growth.</p>
+
+            <hr>
+
+            <h2>The Setup: A Gambler with a Private Wire</h2>
+
+            <p>Kelly's paper posed a specific problem. Imagine a gambler who receives information about horse races through a <strong>noisy private channel</strong> — think of an insider tip that's correct, say, 70% of the time. The gambler knows the channel is noisy. The question: <strong>how much of their bankroll should they bet on each race to maximize long-term wealth?</strong></p>
+
+            <p>This seems like a straightforward probability question. But the naive answers are all wrong:</p>
+
+            <ul>
+                <li><strong>"Bet everything when you have an edge"</strong> — disastrous. One loss and you're wiped out.</li>
+                <li><strong>"Bet a fixed small amount"</strong> — safe, but painfully slow. You're not using your edge efficiently.</li>
+                <li><strong>"Bet proportionally to your edge"</strong> — closer, but what does "proportionally" mean exactly?</li>
+            </ul>
+
+            <p>Kelly solved it exactly. And his answer turned out to be connected to Claude Shannon's information theory in a way that nobody expected.</p>
+
+            <h2>The Formula</h2>
+
+            <p>For a simple bet where you either win or lose, the Kelly criterion says:</p>
+
+            <div class="formula-box">
+                <div class="formula-label">The Kelly Fraction</div>
+                <div class="formula">f* = (bp − q) / b</div>
+                <div class="formula-note">
+                    <strong>f*</strong> = fraction of your bankroll to bet<br>
+                    <strong>b</strong> = net odds (e.g., b = 1 for even money, b = 2 for 2-to-1)<br>
+                    <strong>p</strong> = probability of winning<br>
+                    <strong>q</strong> = 1 − p = probability of losing
+                </div>
+            </div>
+
+            <p>For even-money bets (b = 1), this simplifies to something remarkably clean:</p>
+
+            <div class="formula-box">
+                <div class="formula-label">Even-money Kelly</div>
+                <div class="formula">f* = 2p − 1</div>
+                <div class="formula-note">
+                    If you have a 60% chance of winning an even-money bet, Kelly says bet 20% of your bankroll.<br>
+                    If you have a 55% edge, bet 10%. If you have a 51% edge, bet 2%.<br>
+                    If you have no edge (p = 0.5), bet zero.
+                </div>
+            </div>
+
+            <p>This can be stated even more intuitively: <strong>f* = edge / odds.</strong> Your bet size should be proportional to your edge and inversely proportional to the odds. The bigger your informational advantage, the more you bet. The larger the potential loss, the less you bet.</p>
+
+            <h2>Why Logarithms? The Math of Compounding</h2>
+
+            <p>The derivation reveals why Kelly works. The key insight is that <strong>wealth grows multiplicatively, not additively.</strong></p>
+
+            <p>If you start with bankroll \(W\) and make \(n\) bets, each wagering fraction \(f\), your wealth after \(n\) bets is:</p>
+
+            <div class="formula-box">
+                <div class="formula-label">Multiplicative wealth growth</div>
+                <div class="formula">W<sub>n</sub> = W<sub>0</sub> × (1 + bf)<sup>wins</sup> × (1 − f)<sup>losses</sup></div>
+            </div>
+
+            <p>Taking the logarithm converts multiplication to addition:</p>
+
+            <div class="formula-box">
+                <div class="formula-label">Log growth rate</div>
+                <div class="formula">G(f) = p · log(1 + bf) + q · log(1 − f)</div>
+                <div class="formula-note">
+                    By the law of large numbers, this converges to your long-run growth rate.<br>
+                    Kelly maximizes G(f) by taking the derivative, setting it to zero, and solving for f.
+                </div>
+            </div>
+
+            <p>Setting G'(f) = 0:</p>
+
+            <div class="formula-box">
+                <div class="formula-label">Derivation</div>
+                <div class="formula">pb / (1 + bf) − q / (1 − f) = 0</div>
+                <div class="formula-note">
+                    Rearranging: pb(1 − f) = q(1 + bf)<br>
+                    → pb − pbf = q + qbf → pb − q = fb(p + q) = fb<br>
+                    → <strong>f* = (bp − q) / b</strong>
+                </div>
+            </div>
+
+            <p>This is elegant, but the real insight isn't the formula itself — it's that <strong>the growth rate function G(f) is concave.</strong> There's a single peak. Bet less than f*, you grow slower than optimal. Bet more than f*, you <em>also</em> grow slower than optimal. Bet exactly 2× Kelly, and your expected growth rate drops to <strong>zero.</strong> Bet more than that, and you're expected to go broke.</p>
+
+            <blockquote><p>The most counterintuitive result in all of finance: betting more can make you grow slower. Above the Kelly fraction, increasing your bet size actively destroys wealth.</p></blockquote>
+
+            <h2>The Information Theory Connection</h2>
+
+            <p>Here's where it gets beautiful. Kelly didn't just solve a gambling problem — he proved a deep theorem about the relationship between information and money.</p>
+
+            <p>Kelly showed that the <strong>optimal growth rate of your wealth is exactly equal to the information rate of your private channel</strong> — in Shannon's precise, mathematical sense.</p>
+
+            <div class="callout-box">
+                <div class="callout-title">Kelly's Theorem</div>
+                <p>If you receive information through a channel with capacity <strong>C</strong> bits per transmission, then the maximum achievable growth rate is:</p>
+                <p style="text-align:center; font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--text-primary); margin: 12px 0;"><strong>G* = C</strong> (in bits, or equivalently W<sub>n</sub> ≈ 2<sup>nC</sup>)</p>
+                <p>Your rate of wealth accumulation is <strong>literally bounded by the quality of your information.</strong> Not your courage, not your conviction — your edge, measured in bits.</p>
+            </div>
+
+            <p>This connects Shannon entropy, mutual information, channel capacity, and financial returns into a single framework. It means:</p>
+
+            <ul>
+                <li>If you have <strong>no information</strong> (channel capacity = 0), Kelly says bet nothing. You can't grow.</li>
+                <li>If you have <strong>perfect information</strong> (you know the outcome), Kelly lets you bet maximally and grow at the maximum rate.</li>
+                <li>The entire spectrum between these extremes is governed by <strong>how many bits of useful information you receive per bet.</strong></li>
+            </ul>
+
+            <p>This is profound. It means that how fast you can compound wealth is a question of <strong>information theory</strong>, not bravery or conviction or gut feeling. It's physics.</p>
+
+            <h2>A Concrete Example</h2>
+
+            <div class="example-box">
+                <div class="example-title">The biased coin</div>
+                <p>You're offered a game. A coin comes up heads 60% of the time. It pays even money. You start with $1,000. How should you bet?</p>
+                <p><strong>Kelly says:</strong> f* = 2(0.6) − 1 = <strong>0.20</strong>. Bet 20% of your current bankroll each round.</p>
+                <p><strong>If you bet 20% (Kelly):</strong> After 100 bets, your expected log growth rate is G = 0.6·log(1.2) + 0.4·log(0.8) ≈ 0.020 per bet. Your bankroll roughly doubles every 35 bets. After 250 bets, expected wealth: ~$150,000.</p>
+                <p><strong>If you bet 40% (2× Kelly):</strong> G = 0.6·log(1.4) + 0.4·log(0.6) ≈ 0.000. Growth rate is <em>zero</em>. You go nowhere on average despite having a 60% edge. Your bankroll just random-walks.</p>
+                <p><strong>If you bet 10% (half Kelly):</strong> G ≈ 0.75 × G(f*). You grow at 75% the rate of full Kelly, but with much smaller drawdowns. After 250 bets, expected wealth: ~$50,000. Slower, but far smoother.</p>
+                <p><strong>If you bet 100% (all-in):</strong> First tails and you have $0. Game over. Probability of surviving 100 rounds: 0.6<sup>100</sup> ≈ 6.5 × 10<sup>−23</sup>. Effectively zero.</p>
+            </div>
+
+            <p>The 2× Kelly result is the one that shocks people. You have a genuine, known 60% edge — and betting 40% of your bankroll gives you <em>zero expected growth.</em> The arithmetic mean of your returns is positive, but the geometric mean — the one that governs compounding — is not.</p>
+
+            <p>This is the difference between <strong>additive thinking</strong> and <strong>multiplicative thinking.</strong> In a single bet, 40% is fine. Over hundreds of compounding bets, it's catastrophic.</p>
+
+            <!-- Interactive Kelly Sizer -->
+            <div class="bet-sizer">
+                <div class="sizer-title">Interactive: Kelly bet sizer</div>
+                <div class="slider-group">
+                    <label>Win probability <span id="pVal">60%</span></label>
+                    <input type="range" id="pSlider" min="51" max="95" value="60">
+                </div>
+                <div class="slider-group">
+                    <label>Odds (b:1) <span id="bVal">1.0</span></label>
+                    <input type="range" id="bSlider" min="10" max="50" value="10">
+                </div>
+                <div class="sizer-results">
+                    <div class="sizer-result">
+                        <div class="result-label">Full Kelly</div>
+                        <div class="result-value safe" id="kellyVal">20.0%</div>
+                    </div>
+                    <div class="sizer-result">
+                        <div class="result-label">Half Kelly</div>
+                        <div class="result-value safe" id="halfKellyVal">10.0%</div>
+                    </div>
+                    <div class="sizer-result">
+                        <div class="result-label">Growth rate (full)</div>
+                        <div class="result-value" id="growthVal">2.02%</div>
+                    </div>
+                    <div class="sizer-result">
+                        <div class="result-label">Growth rate (half)</div>
+                        <div class="result-value" id="halfGrowthVal">1.51%</div>
+                    </div>
+                </div>
+            </div>
+
+            <h2>Edward Thorp: From Blackjack to Wall Street</h2>
+
+            <p>The Kelly criterion might have stayed buried in information theory journals if not for <strong>Edward O. Thorp</strong>, an MIT mathematics professor who read Kelly's paper and immediately saw its practical power.</p>
+
+            <p>In 1962, Thorp published <em>Beat the Dealer</em>, the first mathematically rigorous system for beating blackjack through card counting. Card counting gave Thorp an estimate of his edge on each hand. Kelly told him how much to bet. The combination was devastating — casinos eventually banned him and changed their rules.</p>
+
+            <p>But Thorp's real impact was in finance. In 1969, he founded <strong>Princeton Newport Partners</strong>, one of the first quantitative hedge funds. The fund used options pricing models (Thorp independently derived what we now call the Black-Scholes formula, <em>years</em> before Black and Scholes published), statistical arbitrage, and — crucially — Kelly-based position sizing.</p>
+
+            <p>Princeton Newport Partners generated <strong>15.1% annualized returns with minimal drawdowns for nearly 20 years</strong> before closing in 1988 (due to a legal issue involving a partner, not investment losses). Thorp's track record remains one of the most consistent in hedge fund history.</p>
+
+            <p>Thorp advocated <strong>fractional Kelly</strong> — typically half-Kelly — in practice. His reasoning was characteristically precise: in the real world, you never know your exact edge. If you overestimate your edge and bet full Kelly based on the wrong number, you're actually betting <em>above</em> the true Kelly — which, as we saw, can be catastrophic. Half-Kelly provides a buffer against estimation error.</p>
+
+            <h2>Shannon's Secret Portfolio</h2>
+
+            <p>Kelly's colleague at Bell Labs was none other than <strong>Claude Shannon</strong> — the father of information theory, arguably the most brilliant American scientist of the 20th century.</p>
+
+            <p>Shannon was deeply interested in the Kelly criterion. He and Thorp became friends, and in 1961, they built one of the first <strong>wearable computers</strong> — a shoe-mounted device designed to predict roulette outcomes by measuring the ball's speed and deceleration. It worked, though it was never deployed at scale.</p>
+
+            <p>More significantly, Shannon applied information-theoretic thinking to his own investments. Though he was private about his portfolio, records show he achieved approximately <strong>28% annualized returns over 30 years</strong> — a track record that rivals the best professional fund managers.</p>
+
+            <p>The connection is almost poetic: the man who invented the mathematical theory of information used that theory to inform his investment sizing, and it worked spectacularly.</p>
+
+            <h2>Kelly in the Continuous World: The Portfolio Connection</h2>
+
+            <p>For a portfolio of assets with continuous returns, the Kelly criterion takes a matrix form that's strikingly familiar to anyone who's studied portfolio theory:</p>
+
+            <div class="formula-box">
+                <div class="formula-label">Continuous Kelly (multi-asset)</div>
+                <div class="formula">f* = Σ<sup>−1</sup>(μ − r·𝟏)</div>
+                <div class="formula-note">
+                    <strong>Σ<sup>−1</sup></strong> = inverse covariance matrix of asset returns<br>
+                    <strong>μ</strong> = vector of expected returns<br>
+                    <strong>r</strong> = risk-free rate<br>
+                    This is exactly the <strong>Markowitz tangency portfolio</strong> with a specific risk-aversion parameter (λ = 1).
+                </div>
+            </div>
+
+            <p>This is a remarkable convergence. Three seemingly different problems —</p>
+            <ol>
+                <li><strong>Kelly</strong>: "Maximize my long-run geometric growth rate"</li>
+                <li><strong>Markowitz</strong>: "Maximize expected return for a given level of risk"</li>
+                <li><strong>Log utility</strong>: "Maximize my expected logarithmic utility of wealth"</li>
+            </ol>
+            <p>— all produce the <strong>same portfolio</strong> (at the right parameterization). They're three faces of the same underlying mathematical structure. The Kelly portfolio <em>is</em> the mean-variance optimal portfolio <em>is</em> the log-utility-maximizing portfolio.</p>
+
+            <h2>The Fractional Kelly Tradeoff</h2>
+
+            <p>Full Kelly is theoretically optimal but practically terrifying. The standard deviation of the log growth rate <em>equals the mean</em>, which means enormous drawdowns are not just possible — they're expected. A full-Kelly bettor should expect to see their bankroll drop by 50% or more regularly.</p>
+
+            <p>This is why serious practitioners use <strong>fractional Kelly</strong> — typically betting some fraction α of the full Kelly amount. The tradeoff is elegant:</p>
+
+            <div class="callout-box">
+                <div class="callout-title">The fractional Kelly tradeoff</div>
+                <p>If you bet fraction <strong>α</strong> of the Kelly amount, your growth rate is:</p>
+                <p style="text-align:center; font-family: 'JetBrains Mono', monospace; font-size: 1rem; color: var(--text-primary); margin: 10px 0;"><strong>G(αf*) = α(2 − α) · G(f*)</strong></p>
+                <p><strong>Half Kelly (α = 0.5):</strong> You get 75% of the growth rate with roughly half the variance. This is the sweet spot most practitioners target.</p>
+                <p><strong>Quarter Kelly (α = 0.25):</strong> You get 43.75% of the growth rate with much lower drawdowns. Appropriate when estimation uncertainty is high.</p>
+            </div>
+
+            <p>The practical reasons for fractional Kelly are compelling:</p>
+            <ul>
+                <li><strong>Estimation error:</strong> You never know your true edge. If you overestimate by even a small amount, full Kelly becomes over-Kelly, which destroys value. Fractional Kelly provides a margin of safety.</li>
+                <li><strong>Non-stationarity:</strong> Markets change. An edge that existed yesterday may not exist tomorrow. Fractional Kelly makes you more robust to regime changes.</li>
+                <li><strong>Finite horizons:</strong> Kelly's optimality is asymptotic — it holds in the limit. For finite investment horizons, fractional Kelly can actually be superior.</li>
+                <li><strong>Psychology:</strong> A 50% drawdown is theoretically fine for a full-Kelly bettor. Psychologically, it's career-ending for most fund managers.</li>
+            </ul>
+
+            <h2>The Samuelson Critique</h2>
+
+            <p>Not everyone was convinced. <strong>Paul Samuelson</strong>, the Nobel laureate economist, was the Kelly criterion's most famous critic. In 1979, he published a paper with a deliberately provocative title: <em>"Why We Should Not Make Mean Log of Wealth Big Though Years to Act Are Long"</em> — written entirely in one-syllable words to prove his point was simple enough to need no jargon.</p>
+
+            <p>Samuelson's argument: maximizing log utility is <strong>just one preference among many.</strong> A risk-averse investor might prefer a different utility function. A terminally ill patient with one year to live has no use for asymptotically optimal growth. Different people have different risk tolerances, and Kelly imposes a specific one (log utility, which implies a risk-aversion coefficient of exactly 1).</p>
+
+            <p>This critique is mathematically valid but somewhat misses the point. Kelly's result isn't really a claim about utility — it's a <strong>structural theorem about multiplicative processes.</strong> If you're in a repeated game with compounding, and you bet above the Kelly fraction, you will <em>almost surely</em> end up with less wealth than a Kelly bettor, regardless of your utility function. Kelly isn't saying you <em>should</em> maximize log wealth — it's saying that if you bet more than Kelly, you're <strong>provably leaving money on the table.</strong></p>
+
+            <p>The practical resolution: Kelly defines the <strong>upper bound</strong> on sensible bet sizing. You can bet less if you prefer lower variance. You should never bet more.</p>
+
+            <h2>Real-World Kelly</h2>
+
+            <h4>Bill Benter — $1 Billion from Horse Racing</h4>
+            <p>Bill Benter is perhaps the most successful gambler in history. Starting in the 1980s, he developed a statistical model for Hong Kong horse racing that estimated the true probability of each horse winning. He then used Kelly-based position sizing to determine optimal bet amounts. Over several decades, his operation reportedly earned over <strong>$1 billion.</strong> Benter's system was a textbook application: statistical model for edge estimation + Kelly for sizing + disciplined execution.</p>
+
+            <h4>Warren Buffett and Charlie Munger</h4>
+            <p>Buffett has never explicitly said "I use the Kelly criterion," but his investment philosophy is essentially Kelly thinking. He concentrates heavily in his best ideas rather than diversifying into mediocre ones. Charlie Munger has been more explicit — he has directly cited Kelly and the importance of sizing bets in proportion to your edge. Munger: <em>"The wise ones bet heavily when the world offers them that opportunity. They bet big when they have the odds. And the rest of the time, they don't."</em></p>
+
+            <h4>Renaissance Technologies</h4>
+            <p>Jim Simons's Medallion Fund — the most successful hedge fund in history, with ~66% annual returns before fees — is known to use information-theoretic approaches. While the specific methods are secret, the general framework of estimating small edges across thousands of trades and sizing positions optimally is fundamentally Kelly-inspired.</p>
+
+            <h2>The Deeper Lesson</h2>
+
+            <p>The Kelly criterion is often presented as a formula. It's better understood as a <strong>way of thinking.</strong></p>
+
+            <p>What Kelly really tells you is:</p>
+
+            <ol>
+                <li><strong>Your growth rate is bounded by your information.</strong> No amount of leverage, conviction, or cleverness can overcome a lack of genuine edge. If you don't have better information than the market, Kelly says bet zero.</li>
+                <li><strong>Sizing matters as much as selection.</strong> Finding a good bet is only half the problem. Sizing it correctly is the other half, and most people get it catastrophically wrong — usually by betting too much.</li>
+                <li><strong>Overbetting is strictly worse than underbetting.</strong> Below Kelly, you're leaving growth on the table. Above Kelly, you're <em>destroying</em> growth. This asymmetry is the most important practical takeaway.</li>
+                <li><strong>The geometric mean governs everything in a compounding world.</strong> Arithmetic averages are misleading. A strategy that returns +50%, −40%, +50%, −40%... has a positive arithmetic mean (+5% per period) but a negative geometric mean. You're going broke while your spreadsheet says you're winning.</li>
+            </ol>
+
+            <p>Kelly connects information theory, probability, finance, and decision-making into a single, elegant framework. It says that the speed at which you can grow wealth is not a function of your courage or your conviction — it's a function of how much you genuinely know, measured in bits, and how precisely you act on that knowledge.</p>
+
+            <p>In a world full of overconfident bettors and overleveraged portfolios, that might be the most important lesson in quantitative finance.</p>
+
+            <hr>
+
+            <h4>Further Reading</h4>
+            <ul>
+                <li>Kelly, J.L. (1956). <em>"A New Interpretation of Information Rate."</em> Bell System Technical Journal, 35(4), 917–926.</li>
+                <li>Thorp, E.O. (2006). <em>"The Kelly Criterion in Blackjack, Sports Betting, and the Stock Market."</em> Handbook of Asset and Liability Management.</li>
+                <li>Thorp, E.O. (2017). <em>A Man for All Markets.</em> Random House. — Thorp's autobiography; highly recommended.</li>
+                <li>Poundstone, W. (2005). <em>Fortune's Formula.</em> Hill & Wang. — The full history of Kelly, Shannon, and Thorp; reads like a thriller.</li>
+                <li>Samuelson, P.A. (1979). <em>"Why We Should Not Make Mean Log of Wealth Big Though Years to Act Are Long."</em> Journal of Banking & Finance.</li>
+                <li>Cover, T.M. & Thomas, J.A. (2006). <em>Elements of Information Theory</em>, Ch. 6 & 16. — Rigorous treatment of the Kelly-Shannon connection.</li>
+                <li>MacLean, L.C., Thorp, E.O., & Ziemba, W.T. (2011). <em>The Kelly Capital Growth Investment Criterion.</em> World Scientific. — The definitive academic collection.</li>
+            </ul>
+
+        </div>
+    </div>
+
+    <footer class="custom-footer">
+        <div class="footer-text">© 2026 Aastha Jain · built with curiosity and too much coffee ✦</div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" crossorigin="anonymous"></script>
+    <script src="../assets/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mdbootstrap@4.20.0/js/mdb.min.js" crossorigin="anonymous"></script>
+    <script src="../assets/js/theme.js"></script>
+    <script src="../assets/js/dark_mode.js"></script>
+
+    <script>
+        // Interactive Kelly bet sizer
+        const pSlider = document.getElementById('pSlider');
+        const bSlider = document.getElementById('bSlider');
+        const pVal = document.getElementById('pVal');
+        const bVal = document.getElementById('bVal');
+        const kellyVal = document.getElementById('kellyVal');
+        const halfKellyVal = document.getElementById('halfKellyVal');
+        const growthVal = document.getElementById('growthVal');
+        const halfGrowthVal = document.getElementById('halfGrowthVal');
+
+        function updateKelly() {
+            const p = parseInt(pSlider.value) / 100;
+            const b = parseInt(bSlider.value) / 10;
+            const q = 1 - p;
+
+            pVal.textContent = (p * 100).toFixed(0) + '%';
+            bVal.textContent = b.toFixed(1);
+
+            const kelly = Math.max(0, (b * p - q) / b);
+            const halfKelly = kelly / 2;
+
+            // Growth rates
+            const gFull = kelly > 0 ? p * Math.log(1 + b * kelly) + q * Math.log(1 - kelly) : 0;
+            const gHalf = halfKelly > 0 ? p * Math.log(1 + b * halfKelly) + q * Math.log(1 - halfKelly) : 0;
+
+            kellyVal.textContent = (kelly * 100).toFixed(1) + '%';
+            halfKellyVal.textContent = (halfKelly * 100).toFixed(1) + '%';
+            growthVal.textContent = (gFull * 100).toFixed(2) + '%';
+            halfGrowthVal.textContent = (gHalf * 100).toFixed(2) + '%';
+
+            // Color coding
+            kellyVal.className = 'result-value ' + (kelly > 0.5 ? 'danger' : 'safe');
+            halfKellyVal.className = 'result-value safe';
+        }
+
+        pSlider.addEventListener('input', updateKelly);
+        bSlider.addEventListener('input', updateKelly);
+        updateKelly();
+    </script>
+</body>
+</html>

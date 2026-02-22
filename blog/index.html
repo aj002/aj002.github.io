@@ -1,49 +1,109 @@
 <!DOCTYPE html>
-<html lang="en">
-
-
+<html lang="en" data-theme="dark">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <meta name="google-site-verification" content="">
-  <meta name="msvalidate.01" content="">
-  <meta http-equiv="Permissions-Policy" content="interest-cohort=()">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>blog | Aastha Jain</title>
+    <title>writing | Aastha Jain</title>
   <meta name="author" content="Aastha Jain">
-  <meta name="description"
-    content="A simple, whitespace theme for academics. Based on [*folio](https://github.com/bogoli/-folio) design. ">
-  <meta name="keywords" content="jekyll, jekyll-theme, academic-website, portfolio-website">
-  <link rel="stylesheet" href="/assets/css/bootstrap.min.css?a4b3f509e79c54a512b890d73235ef04">
+    <meta name="description" content="Thoughts on AI, quantitative finance, and building things.">
+    <link rel="stylesheet" href="../assets/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdbootstrap@4.20.0/css/mdb.min.css"
     integrity="sha256-jpjYvU3G3N6nrrBwXJoVEYI/0zw8htfFnhT9ljN3JJw=" crossorigin="anonymous">
-  <link defer rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.22.1/dist/bootstrap-table.min.css">
-  <link rel="stylesheet" href="/assets/css/academicons.min.css?f0b7046b84e425c55f3463ac249818f5">
+    <link rel="stylesheet" href="../assets/css/academicons.min.css">
   <link rel="stylesheet" type="text/css"
-    href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:100,300,400,500,700|Material+Icons">
-  <link rel="stylesheet" href="/assets/css/jekyll-pygments-themes-github.css?19f3075a2d19613090fe9e16b564e1fe" media=""
-    id="highlight_theme_light">
-  <link rel="shortcut icon"
-    href="data:image/svg+xml,&lt;svg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20100%20100%22&gt;&lt;text%20y=%22.9em%22%20font-size=%2290%22&gt;%E2%9A%9B%EF%B8%8F&lt;/text&gt;&lt;/svg&gt;">
-  <link rel="stylesheet" href="/assets/css/main.css?d41d8cd98f00b204e9800998ecf8427e">
-  <link rel="canonical" href="https://aj002.github.io/blog/">
-  <link rel="stylesheet" href="/assets/css/jekyll-pygments-themes-native.css?e74e74bf055e5729d44a7d031a5ca6a5"
-    media="none" id="highlight_theme_dark">
-  <script src="/assets/js/theme.js?96d6b3e1c3604aca8b6134c7afdd5db6"></script>
-  <script src="/assets/js/dark_mode.js?9b17307bb950ffa2e34be0227f53558f"></script>
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,700;0,800;1,400&display=swap">
+    <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✦</text></svg>">
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Light mode (default) */
+        :root {
+            --bg: #faf7f5; --surface: #f0ebe6; --card-bg: #ffffff;
+            --rose: #d4537a; --rose-light: #e879a0; --lavender: #8b6fc0;
+            --text-primary: #1a1520; --text-secondary: #5a5068; --text-muted: #8a8298;
+            --border: rgba(212, 83, 122, 0.15); --border-hover: rgba(212, 83, 122, 0.3);
+            --navbar-bg: rgba(250, 247, 245, 0.88);
+            --shadow-medium: rgba(0, 0, 0, 0.06);
+            --hero-grad-start: #1a1520;
+        }
+        /* Dark mode */
+        html[data-theme="dark"] {
+            --bg: #0e0c11; --surface: #15121c; --card-bg: #1c1827;
+            --rose: #e879a0; --rose-light: #f5a3be; --lavender: #c4b5fd;
+            --text-primary: #f0ece5; --text-secondary: #a8a0b5; --text-muted: #6b6580;
+            --border: rgba(232, 121, 160, 0.12); --border-hover: rgba(232, 121, 160, 0.3);
+            --navbar-bg: rgba(14, 12, 17, 0.85);
+            --shadow-medium: rgba(0, 0, 0, 0.2);
+            --hero-grad-start: #fff;
+        }
+        * { box-sizing: border-box; }
+        body {
+            background: var(--bg) !important; color: var(--text-primary) !important;
+            font-family: 'DM Sans', sans-serif; padding: 0 !important;
+            -webkit-font-smoothing: antialiased;
+        }
+        .navbar {
+            background: var(--navbar-bg) !important;
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border-bottom: 1px solid var(--border) !important; box-shadow: none !important;
+        }
+        .navbar .nav-link, .navbar .navbar-brand { color: var(--text-primary) !important; font-family: 'DM Sans', sans-serif; }
+        .navbar .nav-link:hover { color: var(--rose) !important; text-decoration: none; }
+        .navbar .nav-item.active .nav-link { color: var(--rose) !important; font-weight: 600; }
+        .navbar-brand .font-weight-bold { font-weight: 700 !important; }
+        .icon-bar { background-color: var(--text-secondary) !important; }
+        #light-toggle { color: var(--text-muted); border: 0; background: inherit; padding: 0; }
+        #light-toggle:hover { color: var(--rose); }
+        p, h1, h2, h3, h4, h5, h6, em, div, li, span, strong { color: inherit; }
+
+        .page-header {
+            padding: 130px 24px 36px; text-align: center;
+        }
+        .page-header h1 {
+            font-family: 'Playfair Display', serif; font-size: 2.4rem; font-weight: 800;
+            background: linear-gradient(135deg, var(--hero-grad-start) 0%, var(--rose-light) 60%, var(--lavender) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            margin-bottom: 10px;
+        }
+        .page-header .page-desc { font-size: 1rem; color: var(--text-secondary); max-width: 480px; margin: 0 auto; }
+
+        .blog-content { max-width: 700px; margin: 0 auto; padding: 36px 24px 80px; }
+
+        .section-label {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; text-transform: uppercase;
+            letter-spacing: 0.18em; color: var(--rose); margin-bottom: 18px;
+            display: flex; align-items: center; gap: 12px;
+        }
+        .section-label::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--border), transparent); }
+
+        .writing-card {
+            display: block; background: var(--card-bg); border: 1px solid var(--border);
+            border-radius: 16px; padding: 22px 24px; margin-bottom: 14px;
+            text-decoration: none !important; transition: all 0.3s ease;
+        }
+        .writing-card:hover { border-color: var(--border-hover); transform: translateX(5px); box-shadow: 0 8px 24px var(--shadow-medium); }
+        .writing-card .writing-title { font-size: 1.02rem; font-weight: 600; color: var(--text-primary); margin-bottom: 5px; }
+        .writing-card:hover .writing-title { color: var(--rose); }
+        .writing-card .writing-date { font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; color: var(--text-muted); margin-bottom: 6px; }
+        .writing-card .writing-excerpt { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6; }
+
+        .custom-footer {
+            background: var(--surface); border-top: 1px solid var(--border);
+            padding: 36px 24px; text-align: center;
+        }
+        .custom-footer .footer-text { font-size: 0.78rem; color: var(--text-muted); }
+    </style>
 </head>
-
-
-
 <body class="fixed-top-nav">
   <header>
     <nav id="navbar" class="navbar navbar-light navbar-expand-sm fixed-top">
-      <div class="container">
-        <a class="navbar-brand title font-weight-lighter" href="/">
-          <span class="font-weight-bold">Aastha </span>Jain
-        </a>
-        <button class="navbar-toggler collapsed ml-auto" type="button" data-toggle="collapse" data-target="#navbarNav">
+            <div class="container" style="max-width: 960px;">
+                <a class="navbar-brand title" href="../" style="font-family: 'DM Sans', sans-serif;">
+                    <span class="font-weight-bold">Aastha </span>Jain
+                </a>
+                <button class="navbar-toggler collapsed ml-auto" type="button"
+                    data-toggle="collapse" data-target="#navbarNav">
           <span class="sr-only">Toggle navigation</span>
           <span class="icon-bar top-bar"></span>
           <span class="icon-bar middle-bar"></span>
@@ -51,83 +111,51 @@
         </button>
         <div class="collapse navbar-collapse text-right" id="navbarNav">
           <ul class="navbar-nav ml-auto flex-nowrap">
-            <li class="nav-item"><a class="nav-link" href="/">about</a></li>
-            <li class="nav-item active"><a class="nav-link" href="/blog/">blog<span class="sr-only">(current)</span></a></li>
-            <li class="nav-item"><a class="nav-link" href="/publications/">publications</a></li>
+                        <li class="nav-item"><a class="nav-link" href="../">about</a></li>
+                        <li class="nav-item active"><a class="nav-link" href="./">writing<span class="sr-only">(current)</span></a></li>
+                        <li class="nav-item"><a class="nav-link" href="../publications/">research</a></li>
             <li class="toggle-container">
               <button id="light-toggle" title="Change theme">
-                <i class="fa-solid fa-moon"></i>
-                <i class="fa-solid fa-sun"></i>
+                                <i class="fa-solid fa-moon"></i><i class="fa-solid fa-sun"></i>
               </button>
             </li>
           </ul>
         </div>
       </div>
     </nav>
-    <progress id="progress" value="0"><div class="progress-container"><span class="progress-bar"></span></div></progress>
   </header>
 
-  <div class="container mt-5">
-    <div class="post">
-      <header class="post-header">
-        <h1 class="post-title">blog</h1>
-        <p class="post-description">Some things I’ve been thinking about lately.</p>
-      </header>
-      <article>
-
-
-    <div class="blog-list">
-
-      <!-- Research section -->
-      <section class="mb-5">
-        <h2 class="mb-3">Research</h2>
-
-        <div class="blog-post">
-          <h3>Coming Soon!</h3>
-
-        </div>
-
-        <!-- Add more research posts here -->
-      </section>
-
-      <!-- Divider -->
-      <hr class="my-5">
-
-      <!-- Miscellaneous section -->
-      <section>
-        <h2 class="mb-3">Miscellaneous</h2>
-
-        <div class="blog-post">
-          <h3><a href="/_posts/2025-06-16-day-in-the-life.html">A Day in the Life of a Neural Network</a></h3>
-          <p class="text-muted">June 2025 &mdash; When doing my research, I often find myself imagining how AI models would experience the world if they were human. While this isn’t always the best way to understand them, it inspired me to write this playful “day in the life” from a neural network’s perspective!
-
-</p>
-        </div>
-
-        <!-- Add more miscellaneous posts here -->
-      </section>
-
+    <div class="page-header">
+        <h1>writing</h1>
+        <p class="page-desc">Things I've been thinking about lately.</p>
     </div>
 
+    <div class="blog-content">
+        <div class="section-label">Thinking</div>
+        <a href="../_posts/2026-02-21-kelly-criterion.html" class="writing-card">
+            <div class="writing-date">February 2026</div>
+            <div class="writing-title">The Kelly Criterion: How Information Theory Tells You How Much to Bet</div>
+            <div class="writing-excerpt">The most elegant formula in finance connects information theory, probability, and portfolio management — and most people who use it get it wrong.</div>
+        </a>
 
-      </article>
-    </div>
+
+        <div style="height: 36px;"></div>
+        <div class="section-label">Miscellaneous</div>
+        <a href="../_posts/2025-06-16-day-in-the-life.html" class="writing-card">
+            <div class="writing-date">June 2025</div>
+            <div class="writing-title">A Day in the Life of a Neural Network</div>
+            <div class="writing-excerpt">What if a neural network were human? A playful day in the life from a neural network's perspective.</div>
+        </a>
   </div>
 
-  <footer class="fixed-bottom">
-    <div class="container mt-0">
-      © Copyright 2024 Aastha Jain. Powered by <a href="https://jekyllrb.com/" target="_blank">Jekyll</a>,
-      theme by <a href="https://github.com/alshedivat/al-folio" target="_blank">al-folio</a>,
-      hosted on <a href="https://pages.github.com/" target="_blank">GitHub Pages</a>.
-    </div>
+    <footer class="custom-footer">
+        <div class="footer-text">© 2026 Aastha Jain · built with curiosity and too much coffee ✦</div>
   </footer>
 
-  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" crossorigin="anonymous"></script>
-  <script src="/assets/js/bootstrap.bundle.min.js"></script>
+    <script src="../assets/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mdbootstrap@4.20.0/js/mdb.min.js" crossorigin="anonymous"></script>
-  <script src="/assets/js/theme.js"></script>
-  
+    <script src="../assets/js/theme.js"></script>
+    <script src="../assets/js/dark_mode.js"></script>
 </body>
-
 </html>

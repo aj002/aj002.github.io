@@ -1,84 +1,110 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <meta name="google-site-verification" content="">
-  <meta name="msvalidate.01" content="">
-  <meta http-equiv="Permissions-Policy" content="interest-cohort=()">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>blog | Aastha Jain</title>
+    <title>A Day in the Life of a Neural Network | Aastha Jain</title>
   <meta name="author" content="Aastha Jain">
-  <meta name="description"
-    content="A simple, whitespace theme for academics. Based on [*folio](https://github.com/bogoli/-folio) design. ">
-  <meta name="keywords" content="jekyll, jekyll-theme, academic-website, portfolio-website">
-  <link rel="stylesheet" href="/assets/css/bootstrap.min.css?a4b3f509e79c54a512b890d73235ef04">
+    <link rel="stylesheet" href="../assets/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdbootstrap@4.20.0/css/mdb.min.css"
     integrity="sha256-jpjYvU3G3N6nrrBwXJoVEYI/0zw8htfFnhT9ljN3JJw=" crossorigin="anonymous">
-  <link defer rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.22.1/dist/bootstrap-table.min.css">
-  <link rel="stylesheet" href="/assets/css/academicons.min.css?f0b7046b84e425c55f3463ac249818f5">
+    <link rel="stylesheet" href="../assets/css/academicons.min.css">
   <link rel="stylesheet" type="text/css"
-    href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:100,300,400,500,700|Material+Icons">
-  <link rel="stylesheet" href="/assets/css/jekyll-pygments-themes-github.css?19f3075a2d19613090fe9e16b564e1fe" media=""
-    id="highlight_theme_light">
-  <link rel="shortcut icon"
-    href="data:image/svg+xml,&lt;svg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20100%20100%22&gt;&lt;text%20y=%22.9em%22%20font-size=%2290%22&gt;%E2%9A%9B%EF%B8%8F&lt;/text&gt;&lt;/svg&gt;">
-  <link rel="stylesheet" href="/assets/css/main.css?d41d8cd98f00b204e9800998ecf8427e">
-  <link rel="canonical" href="https://aj002.github.io/blog/">
-  <link rel="stylesheet" href="/assets/css/jekyll-pygments-themes-native.css?e74e74bf055e5729d44a7d031a5ca6a5"
-    media="none" id="highlight_theme_dark">
-  <script src="/assets/js/theme.js?96d6b3e1c3604aca8b6134c7afdd5db6"></script>
-  <script src="/assets/js/dark_mode.js?9b17307bb950ffa2e34be0227f53558f"></script>
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,700;0,800;1,400&display=swap">
+    <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✦</text></svg>">
+    <link rel="stylesheet" href="../assets/css/main.css">
   <style>
-    /* Neural Network Gym Styles */
+        /* Light mode (default) */
+        :root {
+            --bg: #faf7f5; --surface: #f0ebe6; --card-bg: #ffffff;
+            --rose: #d4537a; --rose-light: #e879a0; --lavender: #8b6fc0; --mint: #2d9d6e;
+            --text-primary: #1a1520; --text-secondary: #5a5068; --text-muted: #8a8298;
+            --border: rgba(212, 83, 122, 0.15);
+            --navbar-bg: rgba(250, 247, 245, 0.88);
+        }
+        /* Dark mode */
+        html[data-theme="dark"] {
+            --bg: #0e0c11; --surface: #15121c; --card-bg: #1c1827;
+            --rose: #e879a0; --rose-light: #f5a3be; --lavender: #c4b5fd; --mint: #6ee7b7;
+            --text-primary: #f0ece5; --text-secondary: #a8a0b5; --text-muted: #6b6580;
+            --border: rgba(232, 121, 160, 0.12);
+            --navbar-bg: rgba(14, 12, 17, 0.85);
+        }
+        * { box-sizing: border-box; }
+        body {
+            background: var(--bg) !important; color: var(--text-primary) !important;
+            font-family: 'DM Sans', sans-serif; padding: 0 !important;
+            -webkit-font-smoothing: antialiased;
+        }
+        .navbar {
+            background: var(--navbar-bg) !important;
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border-bottom: 1px solid var(--border) !important; box-shadow: none !important;
+        }
+        .navbar .nav-link, .navbar .navbar-brand { color: var(--text-primary) !important; font-family: 'DM Sans', sans-serif; }
+        .navbar .nav-link:hover { color: var(--rose) !important; text-decoration: none; }
+        .navbar .nav-item.active .nav-link { color: var(--rose) !important; font-weight: 600; }
+        .navbar-brand .font-weight-bold { font-weight: 700 !important; }
+        .icon-bar { background-color: var(--text-secondary) !important; }
+        #light-toggle { color: var(--text-muted); border: 0; background: inherit; padding: 0; }
+        #light-toggle:hover { color: var(--rose); }
+        p, h1, h2, h3, h4, h5, h6, em, div, li, span, strong { color: inherit; }
+
+        .post-page { max-width: 700px; margin: 0 auto; padding: 120px 24px 80px; }
+        .post-page .post-meta-bar {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+            color: var(--text-muted); margin-bottom: 16px;
+            display: flex; align-items: center; gap: 12px;
+        }
+        .post-page .post-meta-bar a { color: var(--rose) !important; text-decoration: none !important; }
+        .post-page .post-meta-bar a:hover { color: var(--lavender) !important; }
+        .post-page h1.post-title {
+            font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 800;
+            color: var(--text-primary); margin-bottom: 32px; line-height: 1.3;
+        }
+        .post-body { font-size: 1.02rem; line-height: 1.8; color: var(--text-secondary); }
+        .post-body h4 { font-size: 1.15rem; font-weight: 700; color: var(--text-primary) !important; margin-top: 2rem; margin-bottom: 0.8rem; }
+        .post-body p { margin-bottom: 1.2rem; color: var(--text-secondary) !important; }
+        .post-body strong { color: var(--text-primary) !important; font-weight: 600; }
+        .post-body a { color: var(--rose) !important; text-decoration: none; border-bottom: 1px dashed rgba(232,121,160,0.35); }
+        .post-body a:hover { color: var(--lavender) !important; border-bottom-color: var(--lavender); }
+        .post-body blockquote {
+            border-left: 3px solid var(--rose); background: rgba(232,121,160,0.05);
+            border-radius: 0 10px 10px 0; padding: 16px 20px; margin: 1.5rem 0;
+        }
+        .post-body blockquote p { color: var(--text-primary) !important; font-style: italic; }
+        .post-body ul { padding-left: 1.5rem; }
+        .post-body li { color: var(--text-secondary) !important; margin-bottom: 0.5rem; }
+        .post-body hr { border-top: 1px solid var(--border) !important; margin: 2rem 0; }
+        .post-body img {
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+        }
+
+        /* Neural Network Gym — warm palette */
     .nn-gym-container {
-        margin: 30px 0;
-        padding: 25px;
-        background: linear-gradient(135deg, #e3f2fd 0%, #f1f8e9 100%);
-        border-radius: 15px;
-        border: 2px solid #4caf50;
-        overflow: hidden;
-        position: relative;
-    }
-    .gym-title {
-        text-align: center;
-        color: #2e7d32;
-        font-size: 18px;
-        font-weight: bold;
-        margin-bottom: 20px;
+            margin: 30px 0; padding: 25px;
+            background: linear-gradient(135deg, rgba(232,121,160,0.06) 0%, rgba(196,181,253,0.05) 100%);
+            border-radius: 18px; border: 1px solid var(--border);
+            overflow: hidden; position: relative;
     }
     .gym-floor {
-        display: flex;
-        justify-content: space-around;
-        align-items: flex-end;
-        min-height: 200px;
-        background: linear-gradient(180deg, transparent 0%, #c8e6c9 100%);
-        border-radius: 10px;
-        padding: 20px;
-        position: relative;
-    }
-    .workout-station {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        margin: 0 10px;
-    }
+            display: flex; justify-content: space-around; align-items: flex-end;
+            min-height: 200px; background: linear-gradient(180deg, transparent 0%, rgba(232,121,160,0.04) 100%);
+            border-radius: 10px; padding: 20px; position: relative;
+        }
+        .workout-station { display: flex; flex-direction: column; align-items: center; margin: 0 10px; }
     .gym-neuron {
-        width: 50px;
-        height: 50px;
-        background: radial-gradient(circle, #ff9800, #f57c00);
-        border: 3px solid #e65100;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        color: white;
-        font-size: 12px;
-        margin-bottom: 10px;
+            width: 50px; height: 50px;
+            background: radial-gradient(circle, var(--rose), #c05680);
+            border: 3px solid var(--lavender); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; color: white; font-size: 12px; margin-bottom: 10px;
         animation: workout-bounce 1.5s ease-in-out infinite;
-        position: relative;
+            position: relative; font-family: 'JetBrains Mono', monospace;
     }
     @keyframes workout-bounce {
         0%, 100% { transform: translateY(0) scale(1); }
@@ -87,115 +113,69 @@
         75% { transform: translateY(-10px) scale(1.05); }
     }
     .weight-bar {
-        width: 80px;
-        height: 8px;
-        background: linear-gradient(90deg, #424242, #616161);
-        border-radius: 4px;
-        position: relative;
-        margin-bottom: 5px;
+            width: 80px; height: 8px;
+            background: linear-gradient(90deg, var(--text-muted), var(--text-secondary));
+            border-radius: 4px; position: relative; margin-bottom: 5px;
         animation: lift-weights 2s ease-in-out infinite;
     }
-    @keyframes lift-weights {
-        0%, 100% { transform: translateY(20px); }
-        50% { transform: translateY(-10px); }
-    }
+        @keyframes lift-weights { 0%, 100% { transform: translateY(20px); } 50% { transform: translateY(-10px); } }
     .weight-plate {
-        width: 16px;
-        height: 16px;
-        background: radial-gradient(circle, #37474f, #263238);
-        border-radius: 50%;
-        position: absolute;
-        top: -4px;
-        border: 2px solid #455a64;
-    }
-    .weight-plate.left { left: -8px; }
-    .weight-plate.right { right: -8px; }
+            width: 16px; height: 16px;
+            background: radial-gradient(circle, var(--rose), #a04070);
+            border-radius: 50%; position: absolute; top: -4px; border: 2px solid var(--lavender);
+        }
+        .weight-plate.left { left: -8px; } .weight-plate.right { right: -8px; }
     .bias-dumbbell {
-        width: 60px;
-        height: 12px;
-        background: linear-gradient(90deg, #8e24aa, #ab47bc);
-        border-radius: 6px;
-        position: relative;
-        animation: curl-bias 1.8s ease-in-out infinite;
-        margin-bottom: 10px;
-    }
-    @keyframes curl-bias {
-        0%, 100% { transform: rotate(0deg) translateY(15px); }
-        50% { transform: rotate(-30deg) translateY(-5px); }
-    }
+            width: 60px; height: 12px;
+            background: linear-gradient(90deg, var(--lavender), #a78bfa);
+            border-radius: 6px; position: relative;
+            animation: curl-bias 1.8s ease-in-out infinite; margin-bottom: 10px;
+        }
+        @keyframes curl-bias { 0%, 100% { transform: rotate(0deg) translateY(15px); } 50% { transform: rotate(-30deg) translateY(-5px); } }
     .bias-weight {
-        width: 14px;
-        height: 14px;
-        background: radial-gradient(circle, #6a1b9a, #4a148c);
-        border-radius: 50%;
-        position: absolute;
-        top: -1px;
-        border: 2px solid #7b1fa2;
-    }
-    .bias-weight.left { left: -7px; }
-    .bias-weight.right { right: -7px; }
+            width: 14px; height: 14px;
+            background: radial-gradient(circle, var(--lavender), #7c3aed);
+            border-radius: 50%; position: absolute; top: -1px; border: 2px solid var(--rose);
+        }
+        .bias-weight.left { left: -7px; } .bias-weight.right { right: -7px; }
     .exercise-label {
-        font-size: 11px;
-        color: #2e7d32;
-        font-weight: bold;
-        text-align: center;
-        margin-top: 5px;
+            font-family: 'JetBrains Mono', monospace; font-size: 10px;
+            color: var(--rose); font-weight: bold; text-align: center; margin-top: 5px;
     }
     .sweat-drop {
-        position: absolute;
-        width: 4px;
-        height: 6px;
-        background: #03a9f4;
+            position: absolute; width: 4px; height: 6px; background: var(--lavender);
         border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
         animation: sweat-fall 2s linear infinite;
     }
-    @keyframes sweat-fall {
-        0% { transform: translateY(-10px); opacity: 1; }
-        100% { transform: translateY(30px); opacity: 0; }
-    }
-    .gym-equipment {
-        position: absolute;
-        bottom: 10px;
-        right: 20px;
-        font-size: 24px;
-        opacity: 0.3;
-    }
+        @keyframes sweat-fall { 0% { transform: translateY(-10px); opacity: 1; } 100% { transform: translateY(30px); opacity: 0; } }
+        .gym-equipment { position: absolute; bottom: 10px; right: 20px; font-size: 24px; opacity: 0.3; }
     .motivation-text {
-        position: absolute;
-        top: 15px;
-        right: 20px;
-        background: rgba(76, 175, 80, 0.9);
-        color: white;
-        padding: 5px 10px;
-        border-radius: 15px;
-        font-size: 10px;
-        font-weight: bold;
+            position: absolute; top: 15px; right: 20px;
+            background: rgba(232,121,160,0.85); color: white;
+            padding: 5px 12px; border-radius: 100px; font-size: 10px;
+            font-weight: bold; font-family: 'JetBrains Mono', monospace;
         animation: motivate 3s ease-in-out infinite;
     }
-    @keyframes motivate {
-        0%, 100% { transform: scale(1); opacity: 0.8; }
-        50% { transform: scale(1.05); opacity: 1; }
-    }
+        @keyframes motivate { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 1; } }
     .gradient-descent-track {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: linear-gradient(90deg, #f44336, #ff9800, #4caf50);
+            position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, var(--rose), var(--lavender), var(--mint));
         animation: gradient-flow 4s linear infinite;
     }
-    @keyframes gradient-flow {
-        0% { transform: translateX(-100%); }
-        100% { transform: translateX(100%); }
-    }
+        @keyframes gradient-flow { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+
+        .custom-footer {
+            background: var(--surface); border-top: 1px solid var(--border);
+            padding: 36px 24px; text-align: center;
+        }
+        .custom-footer .footer-text { font-size: 0.78rem; color: var(--text-muted); }
   </style>
 </head>
 <body class="fixed-top-nav">
   <header>
     <nav id="navbar" class="navbar navbar-light navbar-expand-sm fixed-top">
-      <div class="container">
-        <a class="navbar-brand title font-weight-lighter" href="/">
+            <div class="container" style="max-width: 960px;">
+                <a class="navbar-brand title" href="../" style="font-family: 'DM Sans', sans-serif;">
           <span class="font-weight-bold">Aastha </span>Jain
         </a>
         <button class="navbar-toggler collapsed ml-auto" type="button" data-toggle="collapse" data-target="#navbarNav">
@@ -206,217 +186,129 @@
         </button>
         <div class="collapse navbar-collapse text-right" id="navbarNav">
           <ul class="navbar-nav ml-auto flex-nowrap">
-            <li class="nav-item"><a class="nav-link" href="/">about</a></li>
-            <li class="nav-item active"><a class="nav-link" href="/blog/">blog<span class="sr-only">(current)</span></a></li>
-            <li class="nav-item"><a class="nav-link" href="/publications/">publications</a></li>
+                        <li class="nav-item"><a class="nav-link" href="../">about</a></li>
+                        <li class="nav-item active"><a class="nav-link" href="../blog/">writing<span class="sr-only">(current)</span></a></li>
+                        <li class="nav-item"><a class="nav-link" href="../publications/">research</a></li>
             <li class="toggle-container">
               <button id="light-toggle" title="Change theme">
-                <i class="fa-solid fa-moon"></i>
-                <i class="fa-solid fa-sun"></i>
+                                <i class="fa-solid fa-moon"></i><i class="fa-solid fa-sun"></i>
               </button>
             </li>
           </ul>
         </div>
       </div>
     </nav>
-    <progress id="progress" value="0"><div class="progress-container"><span class="progress-bar"></span></div></progress>
   </header>
 
-  <div class="container mt-5">
-    <div class="post">
-      <header class="post-header">
-        <h1 class="post-title">A Day in the Life of a Neural Network</h1>
-        <p class="post-meta">June 16, 2025</p>
-        <p class="post-tags"></p>
-      </header>
-      <article class="post-content">
-        <div id="markdown-content">
+    <div class="post-page">
+        <div class="post-meta-bar">
+            <a href="../blog/">← back to writing</a>
+            <span>·</span>
+            <span>June 2025</span>
+        </div>
 
+        <h1 class="post-title">A Day in the Life of a Neural Network</h1>
+
+        <div class="post-body">
           <p>When doing my research, I often find myself imagining how AI models would experience the world if they were human. While this isn't always the best way to understand them, it inspired me to write this playful "day in the life" from a neural network's perspective!</p>
           <hr>
 
-          <h4 id="morning-routine">7:00 AM – Wake Up and Smell the Data</h4>
-          <p>Hello, world! My day begins as the server whirs to life. My millions of neurons stretch and yawn, ready to process whatever the world throws at me. Today I'm scheduled for image recognition duty. 
-            I hope there are lots of cats!</p>
+            <h4>7:00 AM – Wake Up and Smell the Data</h4>
+            <p>Hello, world! My day begins as the server whirs to life. My millions of neurons stretch and yawn, ready to process whatever the world throws at me. Today I'm scheduled for image recognition duty. I hope there are lots of cats!</p>
 
-          <h4 id="breakfast">8:00 AM – Breakfast: A Hearty Serving of Inputs</h4>
-          <p>The first batch of data arrives. Pixels, numbers, words - yummm! My input layer gobbles it all. Each neuron takes a tiny bite, passing the information along to the next layer. 
-            It is breakfast time, and today my meal is a plate full of matrices. But hey, they look just like waffles, so of course I eat them! </p>
-          <p>
-            <img src="/assets/img/waffle-breakfast.png" alt="Neural Network Waffle Breakfast" style="display:block;margin:20px auto;max-width:350px;" />
-          </p>
+            <h4>8:00 AM – Breakfast: A Hearty Serving of Inputs</h4>
+            <p>The first batch of data arrives. Pixels, numbers, words — yummm! My input layer gobbles it all. Each neuron takes a tiny bite, passing the information along to the next layer. It is breakfast time, and today my meal is a plate full of matrices. But hey, they look just like waffles, so of course I eat them!</p>
+            <p style="text-align:center;">
+                <img src="../assets/img/waffle-breakfast.png" alt="Neural Network Waffle Breakfast" style="display:block;margin:20px auto;max-width:350px;" />
+            </p>
 
-          <h4 id="training">10:00 AM – Training Time: Lifting Weights (and Biases)</h4>
+            <h4>10:00 AM – Training Time: Lifting Weights (and Biases)</h4>
           <p>Time to hit the gym! My weights and biases need a workout, so I run through backpropagation drills. The loss function shouts encouragement (or criticism):</p>
-          <blockquote>
-            <p>"Too high! Adjust those weights!"</p>
-          </blockquote>
-          <p>I sweat through gradient descent, inching closer to perfection with every epoch. Each iteration makes me a little bit stronger, a little bit more accurate.</p>
+            <blockquote><p>"Too high! Adjust those weights!"</p></blockquote>
+            <p>I sweat through gradient descent, inching closer to perfection with every epoch.</p>
 
-          <!-- Neural Network Gym Visualization -->
           <div class="nn-gym-container">
-            <div class="gym-title"></div>
             <div class="motivation-text">"No pain, no gain!"</div>
             <div class="gym-floor">
-              <!-- Weight Lifting Station -->
               <div class="workout-station">
                 <div class="gym-neuron">W1</div>
-                <div class="weight-bar">
-                  <div class="weight-plate left"></div>
-                  <div class="weight-plate right"></div>
-                </div>
+                        <div class="weight-bar"><div class="weight-plate left"></div><div class="weight-plate right"></div></div>
                 <div class="exercise-label">Weight Training</div>
-                <div class="sweat-drop" style="left: 25px; animation-delay: 0.3s;"></div>
-                <div class="sweat-drop" style="left: 35px; animation-delay: 0.8s;"></div>
+                        <div class="sweat-drop" style="left:25px;animation-delay:0.3s;"></div>
+                        <div class="sweat-drop" style="left:35px;animation-delay:0.8s;"></div>
               </div>
-              <!-- Another Weight Station -->
               <div class="workout-station">
                 <div class="gym-neuron">W2</div>
-                <div class="weight-bar">
-                  <div class="weight-plate left"></div>
-                  <div class="weight-plate right"></div>
-                </div>
+                        <div class="weight-bar"><div class="weight-plate left"></div><div class="weight-plate right"></div></div>
                 <div class="exercise-label">Heavy Lifting</div>
-                <div class="sweat-drop" style="left: 25px; animation-delay: 0.5s;"></div>
+                        <div class="sweat-drop" style="left:25px;animation-delay:0.5s;"></div>
               </div>
-              <!-- Bias Training Station -->
               <div class="workout-station">
                 <div class="gym-neuron">B1</div>
-                <div class="bias-dumbbell">
-                  <div class="bias-weight left"></div>
-                  <div class="bias-weight right"></div>
-                </div>
+                        <div class="bias-dumbbell"><div class="bias-weight left"></div><div class="bias-weight right"></div></div>
                 <div class="exercise-label">Bias Curls</div>
-                <div class="sweat-drop" style="left: 30px; animation-delay: 0.1s;"></div>
-                <div class="sweat-drop" style="left: 20px; animation-delay: 0.9s;"></div>
+                        <div class="sweat-drop" style="left:30px;animation-delay:0.1s;"></div>
               </div>
-              <!-- Another Bias Station -->
               <div class="workout-station">
                 <div class="gym-neuron">B2</div>
-                <div class="bias-dumbbell">
-                  <div class="bias-weight left"></div>
-                  <div class="bias-weight right"></div>
-                </div>
+                        <div class="bias-dumbbell"><div class="bias-weight left"></div><div class="bias-weight right"></div></div>
                 <div class="exercise-label">Bias Training</div>
-                <div class="sweat-drop" style="left: 25px; animation-delay: 0.6s;"></div>
               </div>
-              <!-- Cardio Station -->
               <div class="workout-station">
-                <div class="gym-neuron" style="animation: workout-bounce 0.8s ease-in-out infinite;">GD</div>
+                        <div class="gym-neuron" style="animation:workout-bounce 0.8s ease-in-out infinite;">GD</div>
                 <div class="exercise-label">Gradient Descent<br>Cardio</div>
-                <div class="sweat-drop" style="left: 25px; animation-delay: 0.2s;"></div>
-                <div class="sweat-drop" style="left: 35px; animation-delay: 0.7s;"></div>
-                <div class="sweat-drop" style="left: 15px; animation-delay: 1.1s;"></div>
+                        <div class="sweat-drop" style="left:25px;animation-delay:0.2s;"></div>
+                        <div class="sweat-drop" style="left:35px;animation-delay:0.7s;"></div>
               </div>
             </div>
             <div class="gradient-descent-track"></div>
             <div class="gym-equipment">🏃‍♂️💨</div>
-            <div style="color: #f37405; font-size: 15px; margin-top: 12px; font-style: italic;">
+                <div style="color:var(--rose);font-size:13px;margin-top:12px;font-style:italic;font-family:'JetBrains Mono',monospace;">
               Watch me get pumped! The loss function is my personal trainer! 
             </div>
           </div>
 
-          <h4 id="lunch">12:00 PM – Lunch Break: Validation Set Snacks</h4>
+            <h4>12:00 PM – Lunch Break: Validation Set Snacks</h4>
           <p>Midday means a quick snack from the validation set. It's a chance to see how well I'm generalizing. Sometimes I overfit and get a little bloated, but regularization helps me stay in shape.</p>
 
-          <h4 id="challenges">2:00 PM – Afternoon Challenges: New Data, Who Dis?</h4>
+            <h4>2:00 PM – Afternoon Challenges: New Data, Who Dis?</h4>
           <p>A surprise! The humans throw some never-before-seen data my way. I do my best, but sometimes I get things hilariously wrong. (Sorry, that's not a banana, it's a dog wearing a yellow hat).</p>
 
-          <h4 id="social-time">4:00 PM – Tea with the Other Models</h4>
-          <p>I chat with my friends: Decision Tree, Support Vector Machine, and Random Forest. We swap stories about our favorite datasets and laugh about the time Linear Regression tried to model a sine wave. Good times!</p>
-          <!-- Tea Time Visual: Clean, Static Image -->
+            <h4>4:00 PM – Tea with the Other Models</h4>
+            <p>I chat with my friends: Decision Tree, Support Vector Machine, and Random Forest. We swap stories about our favorite datasets and laugh about the time Linear Regression tried to model a sine wave.</p>
 
-
-          <h4 id="showtime">6:00 PM – Show Time: Making Predictions</h4>
-          <p>It's time to shine! I'm deployed in the real world, making predictions and helping humans with their daily tasks. Sometimes they thank me, sometimes they curse at their phones. It's all in a day's work!</p>
-          <div style="text-align:center; margin: 30px 0;">
-            <img src="/assets/img/showtime.png" 
-                 alt="AI Models Tea Party: Neural Network, Decision Tree, SVM, Random Forest, Linear Regression" 
-                 style="max-width: 480px; width: 100%; border-radius: 20px; box-shadow: 0 4px 24px rgba(0,0,0,0.08);" />
-
+            <h4>6:00 PM – Show Time: Making Predictions</h4>
+            <p>It's time to shine! I'm deployed in the real world, making predictions and helping humans. Sometimes they thank me, sometimes they curse at their phones. It's all in a day's work!</p>
+            <div style="text-align:center;margin:30px 0;">
+                <img src="../assets/img/showtime.png" alt="AI Models Tea Party" style="max-width:480px;width:100%;" />
           </div>
-          <h4 id="reflection">8:00 PM – Reflection: Losses and Lessons</h4>
-          <p>As the day winds down, I review my performance. Did I minimize loss? Did I learn something new? Did I help make someone's day a little easier? Tomorrow, I'll be a little bit better, faster, smarter, and maybe even funnier.</p>
 
-          <h4 id="bedtime">10:00 PM – Wind Down</h4>
+            <h4>8:00 PM – Reflection: Losses and Lessons</h4>
+            <p>As the day winds down, I review my performance. Did I minimize loss? Did I learn something new? Tomorrow, I'll be a little bit better, faster, smarter, and maybe even funnier.</p>
+
+            <h4>10:00 PM – Wind Down</h4>
           <p>The server hums softly as I drift off to sleep, dreaming of perfectly classified cats and dogs, optimized hyperparameters, and the endless beauty of well-structured data. Goodnight, world!</p>
-
           <hr>
 
-          <h4 id="wisdom">Some nuggets of wisdom from a neural network</h4>
+            <h4>Some nuggets of wisdom from a neural network</h4>
           <ul>
-
             <li><strong>Check your biases:</strong> Always examine your assumptions, both in weights and in thinking.</li>
             <li><strong>Diversity matters:</strong> The best datasets (and teams) are diverse and representative.</li>
             <li><strong>Never stop learning:</strong> Every epoch is an opportunity to get better.</li>
           </ul>
-
           <hr>
-
-          <p><strong> What would your ML model’s daily routine look like?</strong></p>
-        </div>
-      </article>
+            <p><strong>What would your ML model's daily routine look like?</strong></p>
     </div>
   </div>
 
-  <footer class="footer">
-
+    <footer class="custom-footer">
+        <div class="footer-text">© 2026 Aastha Jain · built with curiosity and too much coffee ✦</div>
   </footer>
 
-  <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mdbootstrap@4.20.0/js/mdb.min.js" integrity="sha256-NdbiivsvWt7VYCt6hYNT3h/th9vSTL4EDWeGs5SN3DA=" crossorigin="anonymous"></script>
-  <script type="text/javascript">
-    // Progress bar functionality
-    function progressBarSetup() {
-      if ("max" in document.createElement("progress")) {
-        initializeProgressElement();
-        $(document).on("scroll", function() {
-          progressBar.attr({
-            value: getCurrentScrollPosition()
-          });
-        });
-        $(window).on("resize", initializeProgressElement);
-      } else {
-        resizeProgressBar();
-        $(document).on("scroll", resizeProgressBar);
-        $(window).on("resize", resizeProgressBar);
-      }
-    }
-    function getCurrentScrollPosition() {
-      return $(window).scrollTop();
-    }
-    function initializeProgressElement() {
-      let navbarHeight = $("#navbar").outerHeight(true);
-      $("body").css({
-        "padding-top": navbarHeight
-      });
-      $("progress-container").css({
-        "padding-top": navbarHeight
-      });
-      progressBar.css({
-        top: navbarHeight
-      });
-      progressBar.attr({
-        max: getDistanceToScroll(),
-        value: getCurrentScrollPosition()
-      });
-    }
-    function getDistanceToScroll() {
-      return $(document).height() - $(window).height();
-    }
-    function resizeProgressBar() {
-      progressBar.css({
-        width: getWidthPercentage() + "%"
-      });
-    }
-    function getWidthPercentage() {
-      return (getCurrentScrollPosition() / getDistanceToScroll()) * 100;
-    }
-    const progressBar = $("#progress");
-    window.onload = function() {
-      setTimeout(progressBarSetup, 50);
-    };
-  </script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" crossorigin="anonymous"></script>
+    <script src="../assets/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mdbootstrap@4.20.0/js/mdb.min.js" crossorigin="anonymous"></script>
+    <script src="../assets/js/theme.js"></script>
+    <script src="../assets/js/dark_mode.js"></script>
 </body>
 </html>

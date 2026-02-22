@@ -1,0 +1,1677 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Rare Event Simulator | Aastha Jain</title>
+  <meta name="author" content="Aastha Jain">
+  <meta name="description" content="Interactive demo showing why importance sampling beats naive Monte Carlo for rare event estimation.">
+  <link rel="stylesheet" href="../../assets/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdbootstrap@4.20.0/css/mdb.min.css"
+    integrity="sha256-jpjYvU3G3N6nrrBwXJoVEYI/0zw8htfFnhT9ljN3JJw=" crossorigin="anonymous">
+  <link rel="stylesheet" href="../../assets/css/academicons.min.css">
+  <link rel="stylesheet" type="text/css"
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,700;0,800;1,400&display=swap">
+  <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✦</text></svg>">
+  <link rel="stylesheet" href="../../assets/css/main.css">
+  <style>
+    :root {
+      --bg: #faf7f5;
+      --surface: #f0ebe6;
+      --card-bg: #ffffff;
+      --rose: #d4537a;
+      --lavender: #8b6fc0;
+      --mint: #2d9d6e;
+      --gold: #c9a12c;
+      --text-primary: #1a1520;
+      --text-secondary: #5a5068;
+      --text-muted: #8a8298;
+      --border: rgba(212, 83, 122, 0.15);
+      --border-strong: rgba(212, 83, 122, 0.32);
+      --navbar-bg: rgba(250, 247, 245, 0.88);
+      --panel-bg: rgba(255, 255, 255, 0.7);
+      --shadow: rgba(0, 0, 0, 0.06);
+    }
+    html[data-theme="dark"] {
+      --bg: #0e0c11;
+      --surface: #15121c;
+      --card-bg: #1c1827;
+      --rose: #e879a0;
+      --lavender: #c4b5fd;
+      --mint: #6ee7b7;
+      --gold: #f5c563;
+      --text-primary: #f0ece5;
+      --text-secondary: #a8a0b5;
+      --text-muted: #6b6580;
+      --border: rgba(232, 121, 160, 0.12);
+      --border-strong: rgba(232, 121, 160, 0.36);
+      --navbar-bg: rgba(14, 12, 17, 0.85);
+      --panel-bg: rgba(28, 24, 39, 0.5);
+      --shadow: rgba(0, 0, 0, 0.2);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      background: var(--bg) !important;
+      color: var(--text-primary) !important;
+      font-family: "DM Sans", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      padding: 0 !important;
+    }
+    p, h1, h2, h3, h4, h5, div, li, span, strong, label { color: inherit; }
+
+    .navbar {
+      background: var(--navbar-bg) !important;
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-bottom: 1px solid var(--border) !important;
+      box-shadow: none !important;
+    }
+    .navbar .nav-link, .navbar .navbar-brand { color: var(--text-primary) !important; }
+    .navbar .nav-link:hover { color: var(--rose) !important; text-decoration: none; }
+    .navbar .nav-item.active .nav-link { color: var(--rose) !important; font-weight: 600; }
+    .icon-bar { background-color: var(--text-secondary) !important; }
+    #light-toggle { color: var(--text-muted); border: 0; background: inherit; padding: 0; }
+    #light-toggle:hover { color: var(--rose); }
+
+    .page-shell {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 118px 24px 80px;
+    }
+    .kicker {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--rose);
+      margin-bottom: 10px;
+    }
+    .title {
+      font-family: "Playfair Display", serif;
+      font-size: 2.3rem;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      color: var(--text-secondary);
+      line-height: 1.75;
+      max-width: 850px;
+      margin-bottom: 16px;
+      font-size: 1.02rem;
+    }
+    .paper-link {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.74rem;
+      color: var(--rose) !important;
+      text-decoration: none !important;
+      border: 1px solid var(--border);
+      padding: 7px 10px;
+      border-radius: 8px;
+      display: inline-block;
+      margin-bottom: 24px;
+      transition: all 0.2s;
+    }
+    .paper-link:hover {
+      border-color: var(--border-strong);
+      color: var(--lavender) !important;
+      background: rgba(232, 121, 160, 0.04);
+      transform: translateY(-1px);
+    }
+
+    /* ── Controls ── */
+    .controls {
+      background: var(--panel-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      display: grid;
+      grid-template-columns: 1.1fr 1fr 1fr 1fr auto;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .quick-explain {
+      margin-top: -6px;
+      margin-bottom: 16px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    /* ── Strategy strip ── */
+    .strategy-strip {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .strategy-title {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.72rem;
+      color: var(--rose);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 10px;
+    }
+    .strategy-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .strategy-card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      background: var(--panel-bg);
+      font-size: 0.86rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      transition: border-color 0.25s, transform 0.25s;
+      position: relative;
+    }
+    .strategy-card:hover {
+      border-color: var(--border-strong);
+      transform: translateY(-2px);
+    }
+    .strategy-card .step-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--rose);
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 700;
+      margin-right: 6px;
+      flex-shrink: 0;
+    }
+    .strategy-card strong {
+      color: var(--text-primary);
+      display: block;
+      margin-bottom: 4px;
+      font-size: 0.88rem;
+    }
+    .strategy-card .analogy {
+      margin-top: 6px;
+      padding: 6px 8px;
+      background: rgba(232, 121, 160, 0.05);
+      border-radius: 6px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+    .strategy-foot {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+    }
+
+    /* ── Verdict ── */
+    .verdict {
+      display: none;
+      background: linear-gradient(135deg, var(--card-bg), var(--surface));
+      border: 1px solid var(--border-strong);
+      border-radius: 14px;
+      padding: 20px 24px;
+      margin-bottom: 18px;
+      text-align: center;
+      animation: fadeSlideIn 0.5s ease;
+    }
+    .verdict.show { display: block; }
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .verdict-headline {
+      font-family: "Playfair Display", serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .verdict-detail {
+      color: var(--text-secondary);
+      font-size: 0.92rem;
+      line-height: 1.6;
+    }
+    .verdict-stat {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 4px;
+      margin: 0 10px;
+    }
+    .verdict-stat .big {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--mint);
+    }
+    .verdict-stat .label {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    /* ── Forms ── */
+    .control-block label {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+      display: block;
+    }
+    .control-block label span {
+      font-family: "JetBrains Mono", monospace;
+      color: var(--rose);
+    }
+    select, input[type="range"] { width: 100%; }
+    select {
+      background: var(--card-bg);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px;
+      font-size: 0.88rem;
+      transition: border-color 0.2s;
+    }
+    select:focus { border-color: var(--rose); outline: none; }
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      outline: none;
+      margin-top: 9px;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background: var(--rose);
+      cursor: pointer;
+      border: 0;
+      transition: transform 0.15s;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+    .btn-stack {
+      display: flex;
+      gap: 8px;
+      align-items: end;
+    }
+    .sim-btn {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--card-bg);
+      color: var(--text-primary);
+      padding: 9px 14px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .sim-btn:hover {
+      border-color: var(--border-strong);
+      color: var(--rose);
+      transform: translateY(-1px);
+    }
+    .sim-btn.primary {
+      background: var(--rose);
+      color: #fff;
+      border-color: var(--rose);
+    }
+    .sim-btn.primary:hover {
+      opacity: 0.88;
+      color: #fff;
+    }
+
+    /* ── Panels ── */
+    .panel-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .panel {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: 0 8px 24px var(--shadow);
+      min-height: 300px;
+      transition: border-color 0.25s;
+    }
+    .panel:hover { border-color: var(--border-strong); }
+    .panel .panel-title {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+      font-family: "JetBrains Mono", monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .panel-hint {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      font-style: italic;
+    }
+    canvas {
+      width: 100%;
+      height: 220px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--panel-bg);
+      display: block;
+    }
+
+    /* ── Step builder ── */
+    .path-builder {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 18px;
+      box-shadow: 0 8px 24px var(--shadow);
+    }
+    .builder-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .builder-title {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .builder-intro {
+      color: var(--text-secondary);
+      font-size: 0.88rem;
+      line-height: 1.6;
+      margin-bottom: 12px;
+      max-width: 780px;
+    }
+    .builder-controls {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .dual-canvas-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+    .dual-canvas-label {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      text-align: center;
+      padding: 4px 0 2px;
+    }
+    .dual-canvas-label.naive { color: var(--rose); }
+    .dual-canvas-label.smart { color: var(--mint); }
+    .step-meta {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .step-chip {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      background: var(--panel-bg);
+      transition: border-color 0.2s;
+    }
+    .step-chip.highlight {
+      border-color: var(--mint);
+      background: rgba(109, 231, 183, 0.06);
+    }
+    .step-chip .k {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.62rem;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .step-chip .v {
+      font-size: 0.9rem;
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+    .builder-note {
+      color: var(--text-secondary);
+      font-size: 0.86rem;
+      line-height: 1.6;
+      margin-top: 8px;
+    }
+    .builder-comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 10px;
+    }
+    .comparison-col {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: var(--panel-bg);
+    }
+    .comparison-col .col-label {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.66rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+    }
+    .comparison-col.naive-col .col-label { color: var(--rose); }
+    .comparison-col.smart-col .col-label { color: var(--mint); }
+    .comparison-col .col-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      padding: 2px 0;
+    }
+    .comparison-col .col-row .ck { color: var(--text-muted); }
+    .comparison-col .col-row .cv { color: var(--text-primary); font-weight: 600; }
+
+    /* ── Metrics ── */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .metric {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      background: var(--panel-bg);
+      min-height: 78px;
+      transition: border-color 0.2s;
+    }
+    .metric:hover { border-color: var(--border-strong); }
+    .metric-label {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 4px;
+    }
+    .metric-value {
+      font-size: 1.03rem;
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+    .metric-sub {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+    }
+
+    /* ── Explainers ── */
+    .section-title {
+      font-family: "Playfair Display", serif;
+      font-size: 1.58rem;
+      margin-top: 4px;
+      margin-bottom: 14px;
+    }
+    details.explain {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 10px;
+      background: var(--card-bg);
+      transition: border-color 0.2s;
+    }
+    details.explain:hover { border-color: var(--border-strong); }
+    details.explain summary {
+      cursor: pointer;
+      padding: 12px 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      list-style: none;
+    }
+    details.explain summary::-webkit-details-marker { display: none; }
+    details.explain summary::after {
+      content: "▸";
+      float: right;
+      color: var(--text-muted);
+      transition: transform 0.2s;
+    }
+    details.explain[open] summary::after {
+      transform: rotate(90deg);
+    }
+    details.explain[open] summary {
+      border-bottom: 1px solid var(--border);
+    }
+    .explain-body {
+      padding: 12px 14px 14px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      font-size: 0.95rem;
+    }
+    .formula {
+      font-family: "JetBrains Mono", monospace;
+      border: 1px solid var(--border);
+      background: var(--panel-bg);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 0.8rem;
+      margin: 10px 0;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+    .footnote {
+      color: var(--text-muted);
+      font-size: 0.82rem;
+    }
+    .custom-footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 36px 24px;
+      text-align: center;
+      margin-top: 30px;
+    }
+    .custom-footer .footer-text {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    /* ── Legend chips ── */
+    .legend {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 8px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.74rem;
+      color: var(--text-muted);
+    }
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    .legend-dot.naive { background: var(--rose); }
+    .legend-dot.smart { background: var(--mint); }
+    .legend-dot.threshold { background: transparent; border: 2px dashed var(--rose); width: 18px; height: 0; border-radius: 0; }
+
+    @media (max-width: 900px) {
+      .controls { grid-template-columns: 1fr; }
+      .strategy-grid { grid-template-columns: 1fr; }
+      .btn-stack { justify-content: flex-start; }
+      .panel-grid { grid-template-columns: 1fr; }
+      .metrics-grid { grid-template-columns: 1fr; }
+      .builder-controls { grid-template-columns: 1fr; }
+      .step-meta { grid-template-columns: 1fr 1fr; }
+      .dual-canvas-wrap { grid-template-columns: 1fr; }
+      .builder-comparison { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 560px) {
+      .title { font-size: 1.8rem; }
+      .page-shell { padding: 108px 16px 70px; }
+    }
+  </style>
+</head>
+<body class="fixed-top-nav">
+  <header>
+    <nav id="navbar" class="navbar navbar-light navbar-expand-sm fixed-top">
+      <div class="container" style="max-width: 960px;">
+        <a class="navbar-brand title" href="../../" style="font-family: 'DM Sans', sans-serif;">
+          <span class="font-weight-bold">Aastha </span>Jain
+        </a>
+        <button class="navbar-toggler collapsed ml-auto" type="button" data-toggle="collapse" data-target="#navbarNav">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar top-bar"></span>
+          <span class="icon-bar middle-bar"></span>
+          <span class="icon-bar bottom-bar"></span>
+        </button>
+        <div class="collapse navbar-collapse text-right" id="navbarNav">
+          <ul class="navbar-nav ml-auto flex-nowrap">
+            <li class="nav-item"><a class="nav-link" href="../../">about</a></li>
+            <li class="nav-item"><a class="nav-link" href="../../blog/">writing</a></li>
+            <li class="nav-item active"><a class="nav-link" href="./">projects<span class="sr-only">(current)</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="../../publications/">research</a></li>
+            <li class="toggle-container">
+              <button id="light-toggle" title="Change theme">
+                <i class="fa-solid fa-moon"></i><i class="fa-solid fa-sun"></i>
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <main class="page-shell">
+    <div class="kicker">Interactive Project</div>
+    <h1 class="title">Rare Event Simulator</h1>
+    <p class="subtitle">
+      Imagine trying to measure how often a 1-in-a-million event happens — by just running random trials.
+      You'd need <em>millions</em> of tries and still might get zero hits.
+      This simulator shows a smarter approach: <strong>importance sampling</strong> steers random paths toward the rare zone,
+      then corrects the bias with math so the answer stays honest. Watch both methods race side by side.
+    </p>
+    <a class="paper-link" href="https://ieeexplore.ieee.org/xpl/conhome/1000674/all-proceedings" target="_blank" rel="noopener">
+      📄 Read the paper — WSC 2024
+    </a>
+
+    <!-- ── Controls ── -->
+    <section class="controls">
+      <div class="control-block">
+        <label for="scenarioSelect">Scenario</label>
+        <select id="scenarioSelect">
+          <option value="starter">🎯 Starter: balanced demo</option>
+          <option value="veryrare">🔬 Very rare event</option>
+          <option value="quick">⚡ Quick run (fewer tries)</option>
+        </select>
+      </div>
+      <div class="control-block">
+        <label for="processSelect">Process type</label>
+        <select id="processSelect">
+          <option value="bm">Simple random walk</option>
+          <option value="ou">Mean-reverting (pulls back)</option>
+          <option value="gbm">Growth process (stocks)</option>
+        </select>
+      </div>
+      <div class="control-block">
+        <label for="thresholdSlider">How rare? <span id="thresholdVal">3.0σ</span></label>
+        <input type="range" id="thresholdSlider" min="2" max="6" step="0.1" value="3">
+      </div>
+      <div class="control-block">
+        <label for="samplesSlider">How many tries? <span id="samplesVal">1000</span></label>
+        <input type="range" id="samplesSlider" min="100" max="50000" step="100" value="1000">
+      </div>
+      <div class="btn-stack">
+        <button class="sim-btn primary" id="runBtn">▶ Run</button>
+        <button class="sim-btn" id="resetBtn">Clear</button>
+      </div>
+    </section>
+
+    <div class="quick-explain" id="quickExplain">
+      💡 Start with "Starter: balanced demo" and click <strong>Run</strong>. Watch the mint (smart) estimate lock in
+      while the pink (regular) one bounces around.
+    </div>
+
+    <!-- ── Smart Strategy ── -->
+    <section class="strategy-strip">
+      <div class="strategy-title">The Smart Strategy — Explained</div>
+      <div class="strategy-grid">
+        <div class="strategy-card">
+          <strong><span class="step-num">1</span> Nudge paths toward the rare zone</strong>
+          Instead of hoping a random path stumbles into the tail, we add a small
+          <em>drift</em> (called λ) that gently pushes paths toward the threshold.
+          More paths cross → more data about the rare event.
+          <div class="analogy">🎣 Like fishing where the fish are, instead of casting randomly across the ocean.</div>
+        </div>
+        <div class="strategy-card">
+          <strong><span class="step-num">2</span> Weigh each path to undo the bias</strong>
+          Because we pushed paths, they're no longer "fair" random samples.
+          So we compute a <em>likelihood ratio</em> (weight) for each path — if we
+          pushed it a lot, we down-weight it. The math:
+          <div class="formula" style="margin:6px 0 4px; font-size:0.72rem;">weight = exp(−λ·W<sub>T</sub> + ½λ²T)</div>
+          This correction makes the final answer unbiased.
+          <div class="analogy">⚖️ Like a survey that over-samples a group, then re-weights to reflect the real population.</div>
+        </div>
+        <div class="strategy-card">
+          <strong><span class="step-num">3</span> Average the weighted results</strong>
+          Each path that crosses the threshold contributes its weight × 1.
+          Paths that don't cross contribute 0. The weighted average
+          gives us the true rare-event probability — but with far less noise
+          than regular sampling.
+          <div class="analogy">📊 Same truth, 10–1000× less noise.</div>
+        </div>
+      </div>
+      <div class="strategy-foot" id="strategySummary">
+        Run a simulation to see live values for λ, weights, and effective samples.
+      </div>
+    </section>
+
+    <!-- ── Verdict (appears after run) ── -->
+    <div class="verdict" id="verdict">
+      <div class="verdict-headline" id="verdictHeadline">Smart sampling wins.</div>
+      <div class="verdict-detail" id="verdictDetail">
+        <span class="verdict-stat"><span class="big" id="verdictVR">—</span><span class="label">× less noise</span></span>
+        <span class="verdict-stat"><span class="big" id="verdictHits">—</span><span class="label">regular hits</span></span>
+        <span class="verdict-stat"><span class="big" id="verdictESS">—</span><span class="label">useful smart samples</span></span>
+      </div>
+    </div>
+
+    <!-- ── Step-by-step Path Builder ── -->
+    <section class="path-builder">
+      <div class="builder-head">
+        <div class="builder-title">🔍 Step-by-Step Path Builder</div>
+      </div>
+      <p class="builder-intro">
+        See how a single random path is constructed, one tiny time step at a time.
+        Both methods start from the same point — but the smart path gets an extra
+        nudge at every step, pushing it toward the rare zone. Scrub the slider or
+        press Play to watch them diverge.
+      </p>
+      <div class="builder-controls">
+        <div class="control-block">
+          <label for="stepSlider">Step <span id="stepVal">0 / 100</span></label>
+          <input type="range" id="stepSlider" min="0" max="100" step="1" value="0">
+        </div>
+        <div class="btn-stack">
+          <button class="sim-btn" id="playStepBtn">▶ Play</button>
+          <button class="sim-btn" id="newPathBtn">New Path</button>
+        </div>
+      </div>
+
+      <!-- Side-by-side canvases -->
+      <div class="dual-canvas-wrap">
+        <div>
+          <div class="dual-canvas-label naive">Regular path</div>
+          <canvas id="stepCanvasNaive" width="500" height="220"></canvas>
+        </div>
+        <div>
+          <div class="dual-canvas-label smart">Smart path (importance-sampled)</div>
+          <canvas id="stepCanvasIS" width="500" height="220"></canvas>
+        </div>
+      </div>
+
+      <!-- Side-by-side step diagnostics -->
+      <div class="builder-comparison">
+        <div class="comparison-col naive-col">
+          <div class="col-label">Regular path — step details</div>
+          <div class="col-row"><span class="ck">random shock (z)</span><span class="cv" id="naiveZ">—</span></div>
+          <div class="col-row"><span class="ck">drift move</span><span class="cv" id="naiveDrift">—</span></div>
+          <div class="col-row"><span class="ck">random move</span><span class="cv" id="naiveDiff">—</span></div>
+          <div class="col-row"><span class="ck">new position</span><span class="cv" id="naiveX">—</span></div>
+        </div>
+        <div class="comparison-col smart-col">
+          <div class="col-label">Smart path — step details</div>
+          <div class="col-row"><span class="ck">raw shock (z)</span><span class="cv" id="smartZRaw">—</span></div>
+          <div class="col-row"><span class="ck">+ nudge (λ√dt)</span><span class="cv" id="smartNudge">—</span></div>
+          <div class="col-row"><span class="ck">tilted shock</span><span class="cv" id="smartZ">—</span></div>
+          <div class="col-row"><span class="ck">new position</span><span class="cv" id="smartX">—</span></div>
+          <div class="col-row"><span class="ck">step weight</span><span class="cv" id="smartStepW">—</span></div>
+          <div class="col-row"><span class="ck">cumulative weight</span><span class="cv" id="smartCumW">—</span></div>
+        </div>
+      </div>
+      <div class="builder-note" id="weightNote">
+        Generate a path, then scrub the slider to compare how the same random step plays out differently in each method.
+      </div>
+    </section>
+
+    <!-- ── Visualization panels ── -->
+    <section class="panel-grid">
+      <div class="panel">
+        <div class="panel-title">Sample paths</div>
+        <div class="panel-hint">Pink = regular, mint = smart. Paths crossing the dashed line hit the rare event.</div>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot naive"></div> Regular</div>
+          <div class="legend-item"><div class="legend-dot smart"></div> Smart</div>
+          <div class="legend-item"><div class="legend-dot threshold"></div> Threshold</div>
+        </div>
+        <canvas id="pathsCanvas" width="900" height="300"></canvas>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Convergence</div>
+        <div class="panel-hint">How quickly each estimate settles. The shaded band is the 95% confidence interval.</div>
+        <canvas id="convCanvas" width="900" height="300"></canvas>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Where paths end up</div>
+        <div class="panel-hint">Distribution of terminal values. The shaded tail (right of dashed line) is the rare zone.</div>
+        <canvas id="histCanvas" width="900" height="300"></canvas>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Scorecard</div>
+        <div class="panel-hint">Key numbers from this run.</div>
+        <div class="metrics-grid">
+          <div class="metric">
+            <div class="metric-label">True probability</div>
+            <div class="metric-value" id="trueProb">—</div>
+            <div class="metric-sub">analytical reference</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Regular estimate</div>
+            <div class="metric-value" id="naiveProb">—</div>
+            <div class="metric-sub" id="naiveCI">± —</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Smart estimate</div>
+            <div class="metric-value" id="isProb">—</div>
+            <div class="metric-sub" id="isCI">± —</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Variance reduction</div>
+            <div class="metric-value" id="vrRatio">—</div>
+            <div class="metric-sub">× less noise with smart method</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Effective smart samples</div>
+            <div class="metric-value" id="essVal">—</div>
+            <div class="metric-sub">after re-weighting</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Regular rare hits</div>
+            <div class="metric-value" id="eventCount">—</div>
+            <div class="metric-sub">times regular sampling saw the event</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── How it works ── -->
+    <section>
+      <div class="kicker">Under the Hood</div>
+      <h2 class="section-title">The Math (optional)</h2>
+
+      <details class="explain">
+        <summary>Why regular Monte Carlo struggles with rare events</summary>
+        <div class="explain-body">
+          Regular Monte Carlo estimates P(rare event) by counting how many random trials
+          happen to hit the tail. If the event has probability <em>p</em>, you need roughly
+          <strong>1/p</strong> samples just to see it once — and many more for a stable answer.
+          <div class="formula">Relative error ≈ 1 / √(n · p)</div>
+          For p = 10⁻⁶, you'd need ~10⁸ samples for 1% relative error. That's wasteful.
+        </div>
+      </details>
+
+      <details class="explain">
+        <summary>How importance sampling fixes this</summary>
+        <div class="explain-body">
+          <strong>Core idea:</strong> sample from a different distribution Q that puts more mass
+          in the rare region, then correct with the <em>likelihood ratio</em> dP/dQ.
+          <br><br>
+          In this simulator, we tilt the SDE's drift by a constant λ:
+          <div class="formula">dX = [b(X,t) + λ·σ(X,t)] dt + σ(X,t) dW̃</div>
+          Under Girsanov's theorem, the likelihood ratio for a Brownian path is:
+          <div class="formula">L = exp(−λ·W<sub>T</sub> + ½·λ²·T)</div>
+          The IS estimator is then:
+          <div class="formula">p̂<sub>IS</sub> = (1/n) Σ 1{X<sub>T</sub> > threshold} · L</div>
+          This estimator is <strong>unbiased</strong> (E[p̂] = p) but has much lower variance
+          when λ is chosen well — typically λ ≈ (threshold − mean) / (σ·T).
+        </div>
+      </details>
+
+      <details class="explain">
+        <summary>Connection to the WSC 2024 paper</summary>
+        <div class="explain-body">
+          This demo uses a <em>constant</em> tilt λ, which works well for simple processes.
+          The paper tackles harder problems — multi-dimensional diffusions where the optimal
+          tilt varies in space and time. It uses <strong>deep learning</strong> to learn
+          the optimal change of measure, guided by the Hamilton-Jacobi-Bellman PDE.
+          <br><br>
+          Think of this simulator as the "level 1" version — it builds the intuition
+          you need before diving into the neural-network approach.
+        </div>
+      </details>
+    </section>
+  </main>
+
+  <footer class="custom-footer">
+    <div class="footer-text">© 2026 Aastha Jain · built with curiosity and too much coffee ✦</div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" crossorigin="anonymous"></script>
+  <script src="../../assets/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mdbootstrap@4.20.0/js/mdb.min.js" crossorigin="anonymous"></script>
+  <script src="../../assets/js/theme.js"></script>
+  <script src="../../assets/js/dark_mode.js"></script>
+
+  <script>
+    /* ─────────────────── DOM refs ─────────────────── */
+    const processSelect  = document.getElementById("processSelect");
+    const scenarioSelect = document.getElementById("scenarioSelect");
+    const thresholdSlider= document.getElementById("thresholdSlider");
+    const samplesSlider  = document.getElementById("samplesSlider");
+    const thresholdVal   = document.getElementById("thresholdVal");
+    const samplesVal     = document.getElementById("samplesVal");
+    const quickExplain   = document.getElementById("quickExplain");
+    const strategySummary= document.getElementById("strategySummary");
+    const runBtn         = document.getElementById("runBtn");
+    const resetBtn       = document.getElementById("resetBtn");
+    const stepSlider     = document.getElementById("stepSlider");
+    const stepVal        = document.getElementById("stepVal");
+    const playStepBtn    = document.getElementById("playStepBtn");
+    const newPathBtn     = document.getElementById("newPathBtn");
+    const verdictEl      = document.getElementById("verdict");
+
+    const pathsCanvas = document.getElementById("pathsCanvas");
+    const convCanvas  = document.getElementById("convCanvas");
+    const histCanvas  = document.getElementById("histCanvas");
+    const stepCanvasNaive = document.getElementById("stepCanvasNaive");
+    const stepCanvasIS    = document.getElementById("stepCanvasIS");
+
+    const pathsCtx = pathsCanvas.getContext("2d");
+    const convCtx  = convCanvas.getContext("2d");
+    const histCtx  = histCanvas.getContext("2d");
+    const stepNaiveCtx = stepCanvasNaive.getContext("2d");
+    const stepISCtx    = stepCanvasIS.getContext("2d");
+
+    const metrics = {
+      trueProb:   document.getElementById("trueProb"),
+      naiveProb:  document.getElementById("naiveProb"),
+      naiveCI:    document.getElementById("naiveCI"),
+      isProb:     document.getElementById("isProb"),
+      isCI:       document.getElementById("isCI"),
+      vrRatio:    document.getElementById("vrRatio"),
+      essVal:     document.getElementById("essVal"),
+      eventCount: document.getElementById("eventCount")
+    };
+    const stepEls = {
+      naiveZ:     document.getElementById("naiveZ"),
+      naiveDrift: document.getElementById("naiveDrift"),
+      naiveDiff:  document.getElementById("naiveDiff"),
+      naiveX:     document.getElementById("naiveX"),
+      smartZRaw:  document.getElementById("smartZRaw"),
+      smartNudge: document.getElementById("smartNudge"),
+      smartZ:     document.getElementById("smartZ"),
+      smartX:     document.getElementById("smartX"),
+      smartStepW: document.getElementById("smartStepW"),
+      smartCumW:  document.getElementById("smartCumW"),
+      weightNote: document.getElementById("weightNote")
+    };
+
+    let latestResult = null;
+    let animFrame    = null;
+    let stepDemo     = null;
+    let stepPlayTimer= null;
+
+    /* ─────── HiDPI canvas helper ─────── */
+    function setupHiDPI(canvas) {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width  = rect.width  * dpr;
+      canvas.height = rect.height * dpr;
+      const ctx = canvas.getContext("2d");
+      ctx.scale(dpr, dpr);
+      return { w: rect.width, h: rect.height, ctx };
+    }
+
+    /* ─────── Process parameters ─────── */
+    const paramsByProcess = {
+      bm:  { x0: 0, mu: 0,    sigma: 1,    T: 1, steps: 100 },
+      ou:  { x0: 0, theta: 0, kappa: 1.5, sigma: 0.8, T: 1, steps: 100 },
+      gbm: { x0: 1, mu: 0.05, sigma: 0.35, T: 1, steps: 100 }
+    };
+    const scenarioPresets = {
+      starter:  { process: "bm", k: 3.0, n: 1500,
+        text: "💡 Starter mode: the event is uncommon but not invisible. Watch the mint (smart) estimate lock in while the pink (regular) one bounces." },
+      veryrare: { process: "bm", k: 4.8, n: 12000,
+        text: "🔬 Very rare mode: regular sampling barely sees the event — smart sampling stays rock-solid. Check the \"Regular rare hits\" in the scorecard." },
+      quick:    { process: "ou", k: 2.5, n: 600,
+        text: "⚡ Quick mode: fewer tries, faster run. Great for exploring the step-by-step path builder." }
+    };
+
+    /* ─────── Math helpers ─────── */
+    function standardNormal() {
+      let u = 0, v = 0;
+      while (u === 0) u = Math.random();
+      while (v === 0) v = Math.random();
+      return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+    }
+    function erfApprox(x) {
+      const sign = x < 0 ? -1 : 1;
+      const ax = Math.abs(x);
+      const t = 1 / (1 + 0.3275911 * ax);
+      const y = 1 - (((((1.061405429*t - 1.453152027)*t + 1.421413741)*t - 0.284496736)*t + 0.254829592)*t) * Math.exp(-ax*ax);
+      return sign * y;
+    }
+    function phi(x) { return 0.5 * (1 + erfApprox(x / Math.sqrt(2))); }
+
+    function processMoments(process, k) {
+      const p = paramsByProcess[process];
+      if (process === "bm") {
+        const mean = p.x0 + p.mu * p.T;
+        const sd   = p.sigma * Math.sqrt(p.T);
+        return { mean, sd, threshold: mean + k * sd, trueProb: 1 - phi(k) };
+      }
+      if (process === "ou") {
+        const mean = p.theta + (p.x0 - p.theta) * Math.exp(-p.kappa * p.T);
+        const sd   = Math.sqrt((p.sigma**2 / (2 * p.kappa)) * (1 - Math.exp(-2 * p.kappa * p.T)));
+        return { mean, sd, threshold: mean + k * sd, trueProb: 1 - phi(k) };
+      }
+      const meanLog = Math.log(p.x0) + (p.mu - 0.5 * p.sigma**2) * p.T;
+      const sdLog   = p.sigma * Math.sqrt(p.T);
+      return { mean: Math.exp(meanLog + 0.5*sdLog**2), sd: 0,
+               threshold: Math.exp(meanLog + k * sdLog), trueProb: 1 - phi(k) };
+    }
+
+    function lambdaForProcess(process, threshold) {
+      const p = paramsByProcess[process];
+      if (process === "bm")  return (threshold - (p.x0 + p.mu * p.T)) / (p.sigma * p.T);
+      if (process === "ou") {
+        const baseMean = p.theta + (p.x0 - p.theta) * Math.exp(-p.kappa * p.T);
+        const gain = p.sigma * (1 - Math.exp(-p.kappa * p.T)) / p.kappa;
+        return gain > 1e-12 ? (threshold - baseMean) / gain : 0;
+      }
+      const meanY = Math.log(p.x0) + (p.mu - 0.5*p.sigma**2) * p.T;
+      return (Math.log(threshold) - meanY) / (p.sigma * p.T);
+    }
+
+    function stepProcess(process, x, dt, z) {
+      const p = paramsByProcess[process];
+      if (process === "bm")  return x + p.mu * dt + p.sigma * Math.sqrt(dt) * z;
+      if (process === "ou")  return x + p.kappa * (p.theta - x) * dt + p.sigma * Math.sqrt(dt) * z;
+      return x * Math.exp((p.mu - 0.5*p.sigma**2) * dt + p.sigma * Math.sqrt(dt) * z);
+    }
+
+    /* ─────── Simulation ─────── */
+    function simulateSinglePath(process, lambda) {
+      const p = paramsByProcess[process];
+      const dt = p.T / p.steps;
+      let xN = p.x0, xI = p.x0, wt = 1;
+      const nPath = [xN], iPath = [xI];
+      const nSteps = [], iSteps = [];
+
+      for (let i = 0; i < p.steps; i++) {
+        // Naive
+        const zN = standardNormal();
+        const prevN = xN;
+        const nextN = stepProcess(process, xN, dt, zN);
+        const driftN = process === "gbm" ? prevN*(Math.exp((p.mu - 0.5*p.sigma**2)*dt) - 1)
+                     : process === "ou"  ? p.kappa*(p.theta - prevN)*dt : p.mu*dt;
+        const diffN  = process === "gbm" ? nextN - prevN - driftN : p.sigma*Math.sqrt(dt)*zN;
+        xN = nextN;
+        nPath.push(xN);
+        nSteps.push({ z: zN, drift: driftN, diffusion: diffN, nextX: xN });
+
+        // IS
+        const zRaw = standardNormal();
+        const zTilted = zRaw + lambda * Math.sqrt(dt);
+        const prevI = xI;
+        const nextI = stepProcess(process, xI, dt, zTilted);
+        const driftI = process === "gbm" ? prevI*(Math.exp((p.mu - 0.5*p.sigma**2)*dt) - 1)
+                     : process === "ou"  ? p.kappa*(p.theta - prevI)*dt : p.mu*dt;
+        const diffI  = process === "gbm" ? nextI - prevI - driftI : p.sigma*Math.sqrt(dt)*zTilted;
+        xI = nextI;
+        iPath.push(xI);
+        const sw = Math.exp(-lambda*Math.sqrt(dt)*zTilted + 0.5*lambda**2*dt);
+        wt *= sw;
+        iSteps.push({ z: zTilted, zRaw, nudge: lambda*Math.sqrt(dt), drift: driftI, diffusion: diffI,
+                       nextX: xI, stepWeight: sw, cumWeight: wt });
+      }
+      return { naivePath: nPath, isPath: iPath, naiveSteps: nSteps, isSteps: iSteps,
+               finalNaive: xN, finalIS: xI, weight: wt };
+    }
+
+    function runSimulation() {
+      const process = processSelect.value;
+      const k = parseFloat(thresholdSlider.value);
+      const n = parseInt(samplesSlider.value, 10);
+      const moments   = processMoments(process, k);
+      const threshold = moments.threshold;
+      const lambda    = lambdaForProcess(process, threshold);
+      const showN     = Math.max(20, Math.min(50, Math.floor(Math.sqrt(n)*1.2)));
+
+      const naiveT = [], isT = [], weights = [], naiveHits = [], isContrib = [];
+      const sNP = [], sIP = [];
+
+      for (let i = 0; i < n; i++) {
+        const sim = simulateSinglePath(process, lambda);
+        naiveT.push(sim.finalNaive);
+        isT.push(sim.finalIS);
+        weights.push(sim.weight);
+        naiveHits.push(sim.finalNaive > threshold ? 1 : 0);
+        isContrib.push(sim.weight * (sim.finalIS > threshold ? 1 : 0));
+        if (i < showN) { sNP.push(sim.naivePath); sIP.push(sim.isPath); }
+      }
+
+      // convergence
+      const convEvery = Math.max(10, Math.floor(n / 220));
+      const convX = [], naiveEst = [], naiveCi = [], isEst = [], isCi = [];
+      let sumN = 0, sumI = 0, sumISq = 0;
+      for (let i = 0; i < n; i++) {
+        sumN += naiveHits[i];
+        sumI += isContrib[i];
+        sumISq += isContrib[i]**2;
+        if ((i+1) % convEvery === 0 || i === n-1) {
+          const pH = sumN/(i+1);
+          const iH = sumI/(i+1);
+          convX.push(i+1);
+          naiveEst.push(pH);
+          naiveCi.push(1.96*Math.sqrt(Math.max(1e-16, pH*(1-pH))/(i+1)));
+          isEst.push(iH);
+          isCi.push(1.96*Math.sqrt(Math.max(1e-16, sumISq/(i+1) - iH**2)/(i+1)));
+        }
+      }
+
+      const naiveP = naiveEst.at(-1);
+      const isP    = isEst.at(-1);
+      let accum = 0;
+      for (let i = 0; i < n; i++) accum += (isContrib[i] - isP)**2;
+      const isVar  = Math.max(1e-16, accum/n);
+      const naiveVar = Math.max(1e-16, naiveP*(1-naiveP));
+      const vr = naiveVar / isVar;
+      let sumW = 0, sumW2 = 0;
+      for (const w of weights) { sumW += w; sumW2 += w*w; }
+      const ess = sumW2 > 0 ? sumW**2 / sumW2 : 0;
+      const eventCount = naiveHits.reduce((a,b) => a+b, 0);
+      const avgWeight  = sumW / n;
+
+      latestResult = {
+        process, k, n, threshold, trueProb: moments.trueProb, lambda,
+        sampleNaivePaths: sNP, sampleISPaths: sIP,
+        naiveTerminals: naiveT, isTerminals: isT,
+        convX, naiveEst, naiveCi, isEst, isCi,
+        metrics: { naiveP, isP, naiveCI: naiveCi.at(-1), isCI: isCi.at(-1),
+                   vr, ess, avgWeight, eventCount }
+      };
+    }
+
+    /* ─────── Step builder ─────── */
+    function buildStepDemo() {
+      const process = processSelect.value;
+      const k = parseFloat(thresholdSlider.value);
+      const moments = processMoments(process, k);
+      const lambda  = lambdaForProcess(process, moments.threshold);
+      const one     = simulateSinglePath(process, lambda);
+      const p = paramsByProcess[process];
+      stepDemo = { process, threshold: moments.threshold, lambda,
+                   steps: p.steps, dt: p.T / p.steps,
+                   naivePath: one.naivePath, isPath: one.isPath,
+                   naiveSteps: one.naiveSteps, isSteps: one.isSteps };
+      stepSlider.max = String(p.steps);
+      stepSlider.value = "0";
+      refreshStepBuilder();
+    }
+
+    function refreshStepBuilder() {
+      if (!stepDemo) return;
+      const idx = Math.max(0, Math.min(stepDemo.steps, parseInt(stepSlider.value,10)||0));
+      stepVal.textContent = idx + " / " + stepDemo.steps;
+      drawOneStepCanvas(stepNaiveCtx, stepCanvasNaive, stepDemo.naivePath, idx, false);
+      drawOneStepCanvas(stepISCtx,    stepCanvasIS,    stepDemo.isPath,    idx, true);
+      updateStepMetrics(idx);
+    }
+
+    function drawOneStepCanvas(ctx, canvas, path, stepIdx, isSmart) {
+      if (!stepDemo) return;
+      const { w, h } = setupHiDPI(canvas);
+      const margin = 24;
+      const cs = getComputedStyle(document.documentElement);
+      const rose = cs.getPropertyValue("--rose");
+      const mint = cs.getPropertyValue("--mint");
+      const muted= cs.getPropertyValue("--text-muted");
+      const border= cs.getPropertyValue("--border");
+
+      // axes
+      ctx.strokeStyle = border;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(margin, h-margin); ctx.lineTo(w-margin, h-margin);
+      ctx.moveTo(margin, margin);   ctx.lineTo(margin, h-margin);
+      ctx.stroke();
+
+      let yMin = Math.min(...path, stepDemo.threshold);
+      let yMax = Math.max(...path, stepDemo.threshold);
+      if (Math.abs(yMax-yMin) < 1e-9) { yMin -= 1; yMax += 1; }
+      const span = yMax-yMin; yMin -= 0.12*span; yMax += 0.12*span;
+
+      const toX = i => margin + (i/stepDemo.steps)*(w-2*margin);
+      const toY = y => h - margin - ((y-yMin)/(yMax-yMin))*(h-2*margin);
+
+      // threshold
+      ctx.strokeStyle = rose;
+      ctx.setLineDash([5,4]);
+      ctx.beginPath();
+      ctx.moveTo(margin, toY(stepDemo.threshold));
+      ctx.lineTo(w-margin, toY(stepDemo.threshold));
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // "rare zone" fill
+      const thrY = toY(stepDemo.threshold);
+      ctx.fillStyle = isSmart ? "rgba(109,231,183,0.04)" : "rgba(232,121,160,0.04)";
+      ctx.fillRect(margin, margin, w-2*margin, thrY - margin);
+
+      // path line
+      const color = isSmart ? mint : rose;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let i = 0; i <= stepIdx; i++) {
+        const xx = toX(i), yy = toY(path[i]);
+        i === 0 ? ctx.moveTo(xx, yy) : ctx.lineTo(xx, yy);
+      }
+      ctx.stroke();
+
+      // future ghost
+      if (stepIdx < stepDemo.steps) {
+        ctx.strokeStyle = muted;
+        ctx.globalAlpha = 0.18;
+        ctx.lineWidth = 1;
+        ctx.setLineDash([3,3]);
+        ctx.beginPath();
+        for (let i = stepIdx; i <= stepDemo.steps; i++) {
+          const xx = toX(i), yy = toY(path[i]);
+          i === stepIdx ? ctx.moveTo(xx, yy) : ctx.lineTo(xx, yy);
+        }
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.globalAlpha = 1;
+      }
+
+      // current dot
+      const cx = toX(stepIdx), cy = toY(path[stepIdx]);
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 5, 0, 2*Math.PI);
+      ctx.fill();
+      // glow
+      ctx.beginPath();
+      ctx.arc(cx, cy, 9, 0, 2*Math.PI);
+      ctx.fillStyle = isSmart ? "rgba(109,231,183,0.2)" : "rgba(232,121,160,0.2)";
+      ctx.fill();
+
+      // labels
+      ctx.fillStyle = muted;
+      ctx.font = "10px JetBrains Mono";
+      ctx.fillText("threshold →", w-100, toY(stepDemo.threshold)-5);
+      ctx.fillText("rare zone ↑", margin+4, margin+12);
+
+      // terminal result indicator
+      if (stepIdx === stepDemo.steps) {
+        const hit = path[stepIdx] > stepDemo.threshold;
+        ctx.font = "bold 11px DM Sans";
+        ctx.fillStyle = hit ? mint : rose;
+        ctx.fillText(hit ? "✓ Hit rare zone!" : "✗ Missed", cx - 40, cy - 14);
+      }
+    }
+
+    function updateStepMetrics(idx) {
+      if (!stepDemo) return;
+      if (idx === 0) {
+        stepEls.naiveZ.textContent = "—";
+        stepEls.naiveDrift.textContent = "—";
+        stepEls.naiveDiff.textContent = "—";
+        stepEls.naiveX.textContent = stepDemo.naivePath[0].toFixed(4);
+        stepEls.smartZRaw.textContent = "—";
+        stepEls.smartNudge.textContent = "λ√dt = " + (stepDemo.lambda * Math.sqrt(stepDemo.dt)).toFixed(4);
+        stepEls.smartZ.textContent = "—";
+        stepEls.smartX.textContent = stepDemo.isPath[0].toFixed(4);
+        stepEls.smartStepW.textContent = "—";
+        stepEls.smartCumW.textContent = "1.0000";
+        stepEls.weightNote.textContent = "Starting point. Move the slider forward to see how each step differs.";
+        return;
+      }
+      const nr = stepDemo.naiveSteps[idx-1];
+      const sr = stepDemo.isSteps[idx-1];
+      stepEls.naiveZ.textContent     = nr.z.toFixed(4);
+      stepEls.naiveDrift.textContent = nr.drift.toFixed(5);
+      stepEls.naiveDiff.textContent  = nr.diffusion.toFixed(5);
+      stepEls.naiveX.textContent     = nr.nextX.toFixed(5);
+
+      stepEls.smartZRaw.textContent  = sr.zRaw.toFixed(4);
+      stepEls.smartNudge.textContent = "+" + sr.nudge.toFixed(4);
+      stepEls.smartZ.textContent     = sr.z.toFixed(4);
+      stepEls.smartX.textContent     = sr.nextX.toFixed(5);
+      stepEls.smartStepW.textContent = sr.stepWeight.toFixed(5);
+      stepEls.smartCumW.textContent  = sr.cumWeight.toFixed(5);
+
+      // plain-English note
+      const diff = (sr.nextX - nr.nextX);
+      const nudgeDir = diff > 0 ? "higher" : "lower";
+      stepEls.weightNote.textContent =
+        `Step ${idx}: The smart path got the same random shock (${sr.zRaw.toFixed(3)}) ` +
+        `plus a nudge of +${sr.nudge.toFixed(4)}, pushing it ${nudgeDir}. ` +
+        `The weight drops to ${sr.cumWeight.toFixed(4)} to compensate.`;
+    }
+
+    function stopStepPlayback() {
+      if (stepPlayTimer) clearInterval(stepPlayTimer);
+      stepPlayTimer = null;
+      playStepBtn.textContent = "▶ Play";
+    }
+    function toggleStepPlayback() {
+      if (!stepDemo) { buildStepDemo(); return; }
+      if (stepPlayTimer) { stopStepPlayback(); return; }
+      playStepBtn.textContent = "⏸ Pause";
+      stepPlayTimer = setInterval(() => {
+        const cur = parseInt(stepSlider.value,10)||0;
+        if (cur >= stepDemo.steps) { stopStepPlayback(); return; }
+        stepSlider.value = String(cur + 1);
+        refreshStepBuilder();
+      }, 80);
+    }
+
+    /* ─────── Drawing helpers ─────── */
+    function fmtProb(x) {
+      if (!isFinite(x)) return "—";
+      if (x === 0) return "0";
+      if (x < 1e-4) return x.toExponential(2);
+      return x.toFixed(6);
+    }
+    function rareEventLabel(k) {
+      const p = 1 - phi(k);
+      if (p <= 0) return "extremely rare";
+      if (p < 1e-4) return "~1 in " + Math.round(1/p).toLocaleString();
+      return "~" + (p*100).toFixed(2) + "%";
+    }
+
+    function clearCanvas(ctx, w, h) {
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--panel-bg");
+      ctx.fillRect(0, 0, w, h);
+    }
+    function drawAxes(ctx, w, h, margin, xLabel, yLabel) {
+      const cs = getComputedStyle(document.documentElement);
+      ctx.strokeStyle = cs.getPropertyValue("--border");
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(margin, h-margin); ctx.lineTo(w-margin, h-margin);
+      ctx.moveTo(margin, margin);   ctx.lineTo(margin, h-margin);
+      ctx.stroke();
+      ctx.fillStyle = cs.getPropertyValue("--text-muted");
+      ctx.font = "10px JetBrains Mono";
+      ctx.fillText(xLabel, w-margin-65, h-margin+14);
+      ctx.save();
+      ctx.translate(10, margin+16);
+      ctx.rotate(-Math.PI/2);
+      ctx.fillText(yLabel, 0, 0);
+      ctx.restore();
+    }
+
+    /* ─────── Panel drawing ─────── */
+    function drawPaths(progress) {
+      if (!latestResult) return;
+      const { w, h } = setupHiDPI(pathsCanvas);
+      const margin = 24;
+      drawAxes(pathsCtx, w, h, margin, "time", "state");
+      const cs = getComputedStyle(document.documentElement);
+      const rose = cs.getPropertyValue("--rose"), mint = cs.getPropertyValue("--mint"),
+            muted = cs.getPropertyValue("--text-muted");
+
+      const allV = [];
+      for (const p of latestResult.sampleNaivePaths) allV.push(...p);
+      for (const p of latestResult.sampleISPaths)    allV.push(...p);
+      allV.push(latestResult.threshold);
+      let ymin = Math.min(...allV), ymax = Math.max(...allV);
+      if (Math.abs(ymax-ymin)<1e-9) { ymin-=1; ymax+=1; }
+      const span = ymax-ymin; ymin -= 0.1*span; ymax += 0.1*span;
+
+      const toX = (i,n,l,r) => l + (i/(n-1))*(r-l);
+      const toY = y => h - margin - ((y-ymin)/(ymax-ymin))*(h-2*margin);
+      const half = w/2;
+
+      // threshold
+      pathsCtx.setLineDash([6,5]); pathsCtx.strokeStyle = rose;
+      const yThr = toY(latestResult.threshold);
+      pathsCtx.beginPath();
+      pathsCtx.moveTo(margin, yThr); pathsCtx.lineTo(half-margin, yThr);
+      pathsCtx.moveTo(half+margin, yThr); pathsCtx.lineTo(w-margin, yThr);
+      pathsCtx.stroke(); pathsCtx.setLineDash([]);
+
+      // rare zone shading
+      pathsCtx.fillStyle = "rgba(232,121,160,0.03)";
+      pathsCtx.fillRect(margin, margin, half-2*margin, yThr-margin);
+      pathsCtx.fillStyle = "rgba(109,231,183,0.03)";
+      pathsCtx.fillRect(half+margin, margin, half-2*margin, yThr-margin);
+
+      const showN = Math.floor(latestResult.sampleNaivePaths.length * progress);
+      for (let p = 0; p < showN; p++) {
+        const path = latestResult.sampleNaivePaths[p];
+        const hit  = path.at(-1) > latestResult.threshold;
+        pathsCtx.strokeStyle = hit ? rose : muted;
+        pathsCtx.globalAlpha = hit ? 0.7 : 0.28;
+        pathsCtx.lineWidth = hit ? 1.5 : 1;
+        pathsCtx.beginPath();
+        for (let i=0;i<path.length;i++) {
+          const x = toX(i,path.length,margin,half-margin), y = toY(path[i]);
+          i===0 ? pathsCtx.moveTo(x,y) : pathsCtx.lineTo(x,y);
+        }
+        pathsCtx.stroke();
+      }
+      for (let p = 0; p < showN; p++) {
+        const path = latestResult.sampleISPaths[p];
+        const hit  = path.at(-1) > latestResult.threshold;
+        pathsCtx.strokeStyle = hit ? mint : muted;
+        pathsCtx.globalAlpha = hit ? 0.75 : 0.25;
+        pathsCtx.lineWidth = hit ? 1.5 : 1;
+        pathsCtx.beginPath();
+        for (let i=0;i<path.length;i++) {
+          const x = toX(i,path.length,half+margin,w-margin), y = toY(path[i]);
+          i===0 ? pathsCtx.moveTo(x,y) : pathsCtx.lineTo(x,y);
+        }
+        pathsCtx.stroke();
+      }
+      pathsCtx.globalAlpha = 1;
+      pathsCtx.font = "11px JetBrains Mono";
+      pathsCtx.fillStyle = rose; pathsCtx.fillText("Regular", margin+4, margin+12);
+      pathsCtx.fillStyle = mint; pathsCtx.fillText("Smart",   half+margin+4, margin+12);
+    }
+
+    function drawConvergence(progress) {
+      if (!latestResult) return;
+      const { w, h } = setupHiDPI(convCanvas);
+      const margin = 30;
+      drawAxes(convCtx, w, h, margin, "samples", "probability");
+      const cs = getComputedStyle(document.documentElement);
+      const rose = cs.getPropertyValue("--rose"), mint = cs.getPropertyValue("--mint"),
+            muted = cs.getPropertyValue("--text-muted");
+
+      const nPts = Math.max(2, Math.floor(latestResult.convX.length * progress));
+      const xArr = latestResult.convX.slice(0, nPts);
+      const nMin = xArr[0], nMax = latestResult.n;
+      let yMax = Math.max(...latestResult.naiveEst.slice(0,nPts), ...latestResult.isEst.slice(0,nPts), latestResult.trueProb);
+      yMax = Math.max(yMax * 1.35, latestResult.trueProb * 1.8, 1e-4);
+
+      const toX = n => { const a = Math.log(Math.max(n,1)), lo = Math.log(Math.max(nMin,1)), hi = Math.log(Math.max(nMax,2));
+        return margin + ((a-lo)/(hi-lo+1e-9))*(w-2*margin); };
+      const toY = p => h - margin - (p/yMax)*(h-2*margin);
+
+      // true p line
+      convCtx.strokeStyle = muted; convCtx.setLineDash([4,4]);
+      convCtx.beginPath();
+      convCtx.moveTo(margin, toY(latestResult.trueProb));
+      convCtx.lineTo(w-margin, toY(latestResult.trueProb));
+      convCtx.stroke(); convCtx.setLineDash([]);
+
+      function drawBand(est, ci, color) {
+        convCtx.fillStyle = color; convCtx.globalAlpha = 0.12;
+        convCtx.beginPath();
+        for (let i=0;i<nPts;i++) convCtx.lineTo(toX(xArr[i]), toY(est[i]+ci[i]));
+        for (let i=nPts-1;i>=0;i--) convCtx.lineTo(toX(xArr[i]), toY(Math.max(0,est[i]-ci[i])));
+        convCtx.closePath(); convCtx.fill(); convCtx.globalAlpha = 1;
+      }
+      function drawLine(est, color) {
+        convCtx.strokeStyle = color; convCtx.lineWidth = 2; convCtx.beginPath();
+        for (let i=0;i<nPts;i++) { const xx=toX(xArr[i]), yy=toY(est[i]);
+          i===0 ? convCtx.moveTo(xx,yy) : convCtx.lineTo(xx,yy); }
+        convCtx.stroke();
+      }
+      drawBand(latestResult.naiveEst, latestResult.naiveCi, rose);
+      drawBand(latestResult.isEst,    latestResult.isCi,    mint);
+      drawLine(latestResult.naiveEst, rose);
+      drawLine(latestResult.isEst,    mint);
+
+      // animated dot at tip
+      if (nPts > 0) {
+        const lastI = nPts-1;
+        [{ est: latestResult.naiveEst, c: rose }, { est: latestResult.isEst, c: mint }].forEach(({ est, c }) => {
+          convCtx.fillStyle = c;
+          convCtx.beginPath();
+          convCtx.arc(toX(xArr[lastI]), toY(est[lastI]), 4, 0, 2*Math.PI);
+          convCtx.fill();
+        });
+      }
+
+      convCtx.font = "10px JetBrains Mono";
+      convCtx.fillStyle = muted;  convCtx.fillText("true p", margin+6, toY(latestResult.trueProb)-5);
+      convCtx.fillStyle = rose;   convCtx.fillText("Regular", w-115, margin+14);
+      convCtx.fillStyle = mint;   convCtx.fillText("Smart",   w-115, margin+28);
+    }
+
+    function drawHistogram(progress) {
+      if (!latestResult) return;
+      const { w, h } = setupHiDPI(histCanvas);
+      const margin = 30;
+      drawAxes(histCtx, w, h, margin, "terminal value", "frequency");
+      const cs = getComputedStyle(document.documentElement);
+      const rose = cs.getPropertyValue("--rose"), mint = cs.getPropertyValue("--mint");
+
+      const n = Math.max(2, Math.floor(latestResult.n * progress));
+      const naive  = latestResult.naiveTerminals.slice(0, n);
+      const isVals = latestResult.isTerminals.slice(0, n);
+      const all = naive.concat(isVals);
+      const minV = Math.min(...all), maxV = Math.max(...all);
+      const bins = 30, binW = (maxV - minV + 1e-9) / bins;
+      const countN = new Array(bins).fill(0), countI = new Array(bins).fill(0);
+      for (const v of naive)  { const b = Math.min(bins-1, Math.max(0, Math.floor((v-minV)/binW))); countN[b]++; }
+      for (const v of isVals) { const b = Math.min(bins-1, Math.max(0, Math.floor((v-minV)/binW))); countI[b]++; }
+
+      const maxCount = Math.max(...countN, ...countI, 1);
+      const pxW = (w - 2*margin) / bins;
+
+      // shade rare zone beyond threshold
+      const thr = latestResult.threshold;
+      const thrX = margin + ((thr - minV)/(maxV - minV + 1e-9))*(w - 2*margin);
+      histCtx.fillStyle = "rgba(232,121,160,0.06)";
+      histCtx.fillRect(thrX, margin, w-margin-thrX, h-2*margin);
+
+      for (let i = 0; i < bins; i++) {
+        const x = margin + i * pxW;
+        const hN = (countN[i]/maxCount)*(h-2*margin);
+        const hI = (countI[i]/maxCount)*(h-2*margin);
+        histCtx.fillStyle = rose; histCtx.globalAlpha = 0.38;
+        histCtx.fillRect(x, h-margin-hN, pxW*0.9, hN);
+        histCtx.fillStyle = mint; histCtx.globalAlpha = 0.38;
+        histCtx.fillRect(x+pxW*0.2, h-margin-hI, pxW*0.7, hI);
+      }
+      histCtx.globalAlpha = 1;
+
+      // threshold line
+      histCtx.strokeStyle = rose; histCtx.setLineDash([6,4]);
+      histCtx.beginPath();
+      histCtx.moveTo(thrX, margin); histCtx.lineTo(thrX, h-margin);
+      histCtx.stroke(); histCtx.setLineDash([]);
+      histCtx.fillStyle = rose; histCtx.font = "10px JetBrains Mono";
+      histCtx.fillText("rare zone →", Math.min(w-100, thrX+6), margin+12);
+    }
+
+    /* ─────── Animation & metrics ─────── */
+    function updateMetrics(progress) {
+      if (!latestResult) return;
+      const m = latestResult.metrics;
+      const b = Math.min(1, Math.max(0, progress));
+      metrics.trueProb.textContent   = fmtProb(latestResult.trueProb);
+      metrics.naiveProb.textContent  = fmtProb(m.naiveP * b);
+      metrics.naiveCI.textContent    = "± " + fmtProb(m.naiveCI * b);
+      metrics.isProb.textContent     = fmtProb(m.isP * b);
+      metrics.isCI.textContent       = "± " + fmtProb(m.isCI * b);
+      metrics.vrRatio.textContent    = (m.vr * b).toFixed(1) + "×";
+      metrics.essVal.textContent     = Math.round(m.ess * b).toString();
+      metrics.eventCount.textContent = Math.round(m.eventCount * b).toString();
+      strategySummary.textContent    =
+        "This run: λ = " + latestResult.lambda.toFixed(3) +
+        "  ·  avg weight = " + m.avgWeight.toFixed(3) +
+        "  ·  effective smart samples = " + Math.round(m.ess).toLocaleString() +
+        " out of " + latestResult.n.toLocaleString();
+    }
+
+    function showVerdict() {
+      if (!latestResult) return;
+      const m = latestResult.metrics;
+      verdictEl.classList.add("show");
+      document.getElementById("verdictVR").textContent   = m.vr.toFixed(1) + "×";
+      document.getElementById("verdictHits").textContent  = m.eventCount.toString();
+      document.getElementById("verdictESS").textContent   = Math.round(m.ess).toLocaleString();
+
+      let headline = "";
+      if (m.vr > 100)     headline = "Smart sampling dominates.";
+      else if (m.vr > 10) headline = "Smart sampling wins convincingly.";
+      else if (m.vr > 2)  headline = "Smart sampling is noticeably better.";
+      else                 headline = "Both methods perform similarly here.";
+      document.getElementById("verdictHeadline").textContent = headline;
+    }
+
+    function animateDraw() {
+      if (!latestResult) return;
+      if (animFrame) cancelAnimationFrame(animFrame);
+      const start = performance.now(), duration = 3200;
+      function frame(t) {
+        const progress = Math.min(1, (t - start) / duration);
+        drawPaths(progress);
+        drawConvergence(progress);
+        drawHistogram(progress);
+        updateMetrics(progress);
+        if (progress < 1) animFrame = requestAnimationFrame(frame);
+        else showVerdict();
+      }
+      animFrame = requestAnimationFrame(frame);
+    }
+
+    /* ─────── Labels & scenarios ─────── */
+    function refreshLabels() {
+      const k = Number(thresholdSlider.value);
+      thresholdVal.textContent = k.toFixed(1) + "σ (" + rareEventLabel(k) + ")";
+      samplesVal.textContent = Number(samplesSlider.value).toLocaleString();
+    }
+    function applyScenario(name) {
+      const preset = scenarioPresets[name];
+      if (!preset) return;
+      processSelect.value  = preset.process;
+      thresholdSlider.value = String(preset.k);
+      samplesSlider.value   = String(preset.n);
+      quickExplain.innerHTML = preset.text;
+      refreshLabels();
+      runAll();
+    }
+
+    /* ─────── Run / Reset ─────── */
+    function runAll() {
+      verdictEl.classList.remove("show");
+      stopStepPlayback();
+      runSimulation();
+      buildStepDemo();
+      animateDraw();
+    }
+    function resetView() {
+      stopStepPlayback();
+      latestResult = null;
+      stepDemo = null;
+      verdictEl.classList.remove("show");
+      [pathsCanvas, convCanvas, histCanvas, stepCanvasNaive, stepCanvasIS].forEach(c => {
+        const { w, h } = setupHiDPI(c);
+        clearCanvas(c.getContext("2d"), w, h);
+      });
+      for (const key of Object.keys(metrics))
+        metrics[key].textContent = key === "naiveCI" || key === "isCI" ? "± —" : "—";
+      strategySummary.textContent = "Run a simulation to see live values for λ, weights, and effective samples.";
+      stepVal.textContent = "0 / 100";
+      Object.values(stepEls).forEach(el => { if (el.tagName !== "DIV" || el.id === "weightNote") el.textContent = "—"; });
+      stepEls.weightNote.textContent = "Generate a path, then scrub the slider to compare how each step works.";
+    }
+
+    /* ─────── Event listeners ─────── */
+    scenarioSelect.addEventListener("change", () => applyScenario(scenarioSelect.value));
+    thresholdSlider.addEventListener("input", refreshLabels);
+    samplesSlider.addEventListener("input", refreshLabels);
+    processSelect.addEventListener("change", runAll);
+    stepSlider.addEventListener("input", () => { stopStepPlayback(); refreshStepBuilder(); });
+    playStepBtn.addEventListener("click", toggleStepPlayback);
+    newPathBtn.addEventListener("click", () => { stopStepPlayback(); buildStepDemo(); });
+    runBtn.addEventListener("click", runAll);
+    resetBtn.addEventListener("click", () => { if (animFrame) cancelAnimationFrame(animFrame); resetView(); });
+
+    /* ─────── Boot ─────── */
+    applyScenario("starter");
+  </script>
+</body>
+</html>
