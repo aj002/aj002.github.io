@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <meta charset="utf-8">
@@ -17,25 +17,25 @@
     <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✦</text></svg>">
     <link rel="stylesheet" href="../assets/css/main.css">
     <style>
-        /* Light mode (default) */
+        /* Light mode — soft blush / rose */
         :root {
-            --bg: #faf7f5; --surface: #f0ebe6; --card-bg: #ffffff;
-            --rose: #d4537a; --rose-light: #e879a0; --lavender: #8b6fc0;
-            --text-primary: #1a1520; --text-secondary: #5a5068; --text-muted: #8a8298;
-            --border: rgba(212, 83, 122, 0.15); --border-hover: rgba(212, 83, 122, 0.3);
-            --navbar-bg: rgba(250, 247, 245, 0.88);
-            --shadow-medium: rgba(0, 0, 0, 0.06);
-            --hero-grad-start: #1a1520;
+            --bg: #fdf2f6; --surface: #f5e4ec; --card-bg: #fff7fa;
+            --rose: #c94d75; --rose-light: #e077a0; --lavender: #8b6fc0;
+            --text-primary: #3d1f33; --text-secondary: #6b4561; --text-muted: #997a8d;
+            --border: rgba(201, 77, 117, 0.18); --border-hover: rgba(201, 77, 117, 0.35);
+            --navbar-bg: rgba(253, 242, 246, 0.9);
+            --shadow-medium: rgba(100, 30, 60, 0.06);
+            --hero-grad-start: #3d1f33;
         }
-        /* Dark mode */
+        /* Dark mode — deep plum / purple */
         html[data-theme="dark"] {
-            --bg: #0e0c11; --surface: #15121c; --card-bg: #1c1827;
+            --bg: #1a0e1e; --surface: #231528; --card-bg: #2c1a33;
             --rose: #e879a0; --rose-light: #f5a3be; --lavender: #c4b5fd;
-            --text-primary: #f0ece5; --text-secondary: #a8a0b5; --text-muted: #6b6580;
-            --border: rgba(232, 121, 160, 0.12); --border-hover: rgba(232, 121, 160, 0.3);
-            --navbar-bg: rgba(14, 12, 17, 0.85);
+            --text-primary: #f5e8f0; --text-secondary: #c4a8b8; --text-muted: #806a78;
+            --border: rgba(232, 121, 160, 0.15); --border-hover: rgba(232, 121, 160, 0.35);
+            --navbar-bg: rgba(26, 14, 30, 0.88);
             --shadow-medium: rgba(0, 0, 0, 0.2);
-            --hero-grad-start: #fff;
+            --hero-grad-start: #f5e8f0;
         }
         * { box-sizing: border-box; }
         body {
@@ -189,5 +189,13 @@
     <script src="https://cdn.jsdelivr.net/npm/mdbootstrap@4.20.0/js/mdb.min.js" crossorigin="anonymous"></script>
     <script src="../assets/js/theme.js"></script>
     <script src="../assets/js/dark_mode.js"></script>
+    <script>
+      (function () {
+        var btn = document.getElementById('light-toggle');
+        if (btn && typeof window.toggleTheme === 'function') {
+          btn.onclick = function () { window.toggleTheme(); };
+        }
+      })();
+    </script>
 </body>
 </html>
