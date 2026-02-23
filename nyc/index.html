@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>NYC Guide | Aastha Jain</title>
+  <meta name="author" content="Aastha Jain">
+  <meta name="description" content="Aastha's rated spots in NYC — cafes, restaurants, bars, and dance floors.">
+  <link rel="stylesheet" href="../assets/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdbootstrap@4.20.0/css/mdb.min.css"
+    integrity="sha256-jpjYvU3G3N6nrrBwXJoVEYI/0zw8htfFnhT9ljN3JJw=" crossorigin="anonymous">
+  <link rel="stylesheet" href="../assets/css/academicons.min.css">
+  <link rel="stylesheet" type="text/css"
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,700;0,800;1,400&display=swap">
+  <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✦</text></svg>">
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+  <style>
+    /* Light mode — soft blush / rose */
+    :root {
+      --bg: #fdf2f6; --surface: #f5e4ec; --card-bg: #fff7fa;
+      --rose: #c94d75; --rose-light: #e077a0; --lavender: #8b6fc0;
+      --gold: #c9a12c; --mint: #2d9d6e;
+      --text-primary: #3d1f33; --text-secondary: #6b4561; --text-muted: #997a8d;
+      --border: rgba(201, 77, 117, 0.18); --border-hover: rgba(201, 77, 117, 0.35);
+      --navbar-bg: rgba(253, 242, 246, 0.9);
+      --shadow-medium: rgba(100, 30, 60, 0.06);
+      --hero-grad-start: #3d1f33;
+    }
+    /* Dark mode — deep plum / purple */
+    html[data-theme="dark"] {
+      --bg: #1a0e1e; --surface: #231528; --card-bg: #2c1a33;
+      --rose: #e879a0; --rose-light: #f5a3be; --lavender: #c4b5fd;
+      --gold: #f5c563; --mint: #6ee7b7;
+      --text-primary: #f5e8f0; --text-secondary: #c4a8b8; --text-muted: #806a78;
+      --border: rgba(232, 121, 160, 0.15); --border-hover: rgba(232, 121, 160, 0.35);
+      --navbar-bg: rgba(26, 14, 30, 0.88);
+      --shadow-medium: rgba(0, 0, 0, 0.2);
+      --hero-grad-start: #f5e8f0;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      background: var(--bg) !important; color: var(--text-primary) !important;
+      font-family: 'DM Sans', sans-serif; padding: 0 !important;
+      -webkit-font-smoothing: antialiased;
+    }
+    p, h1, h2, h3, h4, h5, div, li, span, strong { color: inherit; }
+
+    /* Navbar */
+    .navbar {
+      background: var(--navbar-bg) !important;
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      border-bottom: 1px solid var(--border) !important; box-shadow: none !important;
+    }
+    .navbar .nav-link, .navbar .navbar-brand { color: var(--text-primary) !important; font-family: 'DM Sans', sans-serif; }
+    .navbar .nav-link:hover { color: var(--rose) !important; text-decoration: none; }
+    .navbar .nav-item.active .nav-link { color: var(--rose) !important; font-weight: 600; }
+    .navbar-brand .font-weight-bold { font-weight: 700 !important; }
+    .icon-bar { background-color: var(--text-secondary) !important; }
+    #light-toggle { color: var(--text-muted); border: 0; background: inherit; padding: 0; }
+    #light-toggle:hover { color: var(--rose); }
+
+    /* Page */
+    .page-shell {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 110px 24px 60px;
+    }
+    .page-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.2rem; font-weight: 800; margin-bottom: 6px;
+      background: linear-gradient(135deg, var(--hero-grad-start) 0%, var(--rose-light) 60%, var(--lavender) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .page-desc {
+      color: var(--text-secondary); font-size: 1rem; margin-bottom: 20px;
+    }
+
+    /* Filters */
+    .filters {
+      display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px;
+    }
+    .filter-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.76rem; padding: 6px 16px;
+      border-radius: 100px; border: 1px solid var(--border);
+      background: var(--card-bg); color: var(--text-secondary);
+      cursor: pointer; transition: all 0.2s; user-select: none;
+    }
+    .filter-pill:hover { border-color: var(--rose); color: var(--rose); }
+    .filter-pill.active {
+      background: var(--rose); color: #fff; border-color: var(--rose);
+    }
+
+    /* Map + List layout */
+    .map-layout {
+      display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px;
+      margin-bottom: 30px;
+    }
+    #map {
+      height: 520px; border-radius: 16px;
+      border: 1px solid var(--border);
+      box-shadow: 0 8px 24px var(--shadow-medium);
+      z-index: 0;
+    }
+    /* Desaturate map tiles in dark mode */
+    html[data-theme="dark"] .leaflet-tile-pane { filter: brightness(0.7) saturate(0.5) hue-rotate(10deg); }
+    .leaflet-popup-content-wrapper {
+      background: var(--card-bg) !important; color: var(--text-primary) !important;
+      border-radius: 12px !important; box-shadow: 0 6px 20px var(--shadow-medium) !important;
+      border: 1px solid var(--border);
+    }
+    .leaflet-popup-tip { background: var(--card-bg) !important; }
+    .leaflet-popup-content { margin: 10px 14px !important; font-family: 'DM Sans', sans-serif; }
+    .popup-name { font-weight: 600; font-size: 0.92rem; margin-bottom: 2px; }
+    .popup-hood { font-size: 0.76rem; color: var(--text-muted); margin-bottom: 4px; }
+    .popup-note { font-size: 0.8rem; color: var(--text-secondary); font-style: italic; }
+    .popup-stars { color: var(--gold); font-size: 0.85rem; letter-spacing: 1px; }
+
+    /* Spot list */
+    .spot-list {
+      max-height: 520px; overflow-y: auto;
+      display: flex; flex-direction: column; gap: 10px;
+      padding-right: 4px;
+    }
+    .spot-list::-webkit-scrollbar { width: 4px; }
+    .spot-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .spot-card {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px 16px;
+      cursor: pointer; transition: all 0.25s;
+    }
+    .spot-card:hover, .spot-card.active {
+      border-color: var(--border-hover);
+      transform: translateX(4px);
+      box-shadow: 0 6px 18px var(--shadow-medium);
+    }
+    .spot-card .spot-top {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 4px;
+    }
+    .spot-card .spot-name {
+      font-size: 0.95rem; font-weight: 600;
+    }
+    .spot-card:hover .spot-name { color: var(--rose); }
+    .spot-card .spot-cat {
+      font-size: 1rem;
+    }
+    .spot-card .spot-hood {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.06em;
+      margin-bottom: 4px;
+    }
+    .spot-card .spot-stars {
+      color: var(--gold); font-size: 0.82rem; letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+    .spot-card .spot-note {
+      font-size: 0.82rem; color: var(--text-secondary);
+      font-style: italic; line-height: 1.5;
+    }
+
+    /* Category colors for left border accent */
+    .spot-card[data-cat="cafe"]  { border-left: 3px solid var(--rose); }
+    .spot-card[data-cat="eat"]   { border-left: 3px solid var(--gold); }
+    .spot-card[data-cat="drink"] { border-left: 3px solid var(--lavender); }
+    .spot-card[data-cat="dance"] { border-left: 3px solid var(--mint); }
+
+    /* Footer */
+    .custom-footer {
+      background: var(--surface); border-top: 1px solid var(--border);
+      padding: 36px 24px; text-align: center;
+    }
+    .custom-footer .footer-text { font-size: 0.78rem; color: var(--text-muted); }
+
+    /* Count badge */
+    .spot-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem; color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    @media (max-width: 768px) {
+      .map-layout { grid-template-columns: 1fr; }
+      #map { height: 340px; }
+      .spot-list { max-height: none; }
+      .page-title { font-size: 1.8rem; }
+    }
+  </style>
+</head>
+<body class="fixed-top-nav">
+  <header>
+    <nav id="navbar" class="navbar navbar-light navbar-expand-sm fixed-top">
+      <div class="container" style="max-width: 960px;">
+        <a class="navbar-brand title" href="../" style="font-family: 'DM Sans', sans-serif;">
+          <span class="font-weight-bold">Aastha </span>Jain
+        </a>
+        <button class="navbar-toggler collapsed ml-auto" type="button" data-toggle="collapse" data-target="#navbarNav">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar top-bar"></span>
+          <span class="icon-bar middle-bar"></span>
+          <span class="icon-bar bottom-bar"></span>
+        </button>
+        <div class="collapse navbar-collapse text-right" id="navbarNav">
+          <ul class="navbar-nav ml-auto flex-nowrap">
+            <li class="nav-item"><a class="nav-link" href="../">about</a></li>
+            <li class="nav-item"><a class="nav-link" href="../blog/">writing</a></li>
+            <li class="nav-item"><a class="nav-link" href="../publications/">research</a></li>
+            <li class="nav-item active"><a class="nav-link" href="./">nyc guide<span class="sr-only">(current)</span></a></li>
+            <li class="toggle-container">
+              <button id="light-toggle" title="Change theme">
+                <i class="fa-solid fa-moon"></i><i class="fa-solid fa-sun"></i>
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <main class="page-shell">
+    <h1 class="page-title">NYC Guide</h1>
+    <p class="page-desc">Places I actually go back to.</p>
+
+    <div class="filters" id="filters">
+      <div class="filter-pill active" data-filter="all">All</div>
+      <div class="filter-pill" data-filter="cafe">☕ Cafe</div>
+      <div class="filter-pill" data-filter="eat">🍽 Eat</div>
+      <div class="filter-pill" data-filter="drink">🍸 Drink</div>
+      <div class="filter-pill" data-filter="dance">💃 Dance</div>
+    </div>
+
+    <div class="spot-count" id="spotCount"></div>
+
+    <div class="map-layout">
+      <div id="map"></div>
+      <div class="spot-list" id="spotList"></div>
+    </div>
+  </main>
+
+  <footer class="custom-footer">
+    <div class="footer-text">© 2026 Aastha Jain · built with curiosity and too much matcha ✦</div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" crossorigin="anonymous"></script>
+  <script src="../assets/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mdbootstrap@4.20.0/js/mdb.min.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
+  <script>
+    /* ========== THEME TOGGLE ========== */
+    (function () {
+      function setTheme(mode) {
+        document.documentElement.setAttribute('data-theme', mode);
+        localStorage.setItem('theme', mode);
+      }
+      function toggle() {
+        var cur = document.documentElement.getAttribute('data-theme');
+        setTheme(cur === 'dark' ? 'light' : 'dark');
+      }
+      var saved = localStorage.getItem('theme');
+      if (!saved || saved === 'null') {
+        saved = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+      }
+      setTheme(saved);
+      var btn = document.getElementById('light-toggle');
+      if (btn) btn.addEventListener('click', toggle);
+    })();
+
+    /* ========== SPOT DATA ========== */
+    var spots = [
+      {
+        name: "Slate Cafe",
+        neighborhood: "NoMad",
+        cat: "cafe",
+        stars: 5,
+        note: "perfect work cafe — great coffee, fast wifi, never too crowded",
+        lat: 40.7454, lng: -73.9880
+      },
+      {
+        name: "Brass Monkey",
+        neighborhood: "Meatpacking",
+        cat: "dance",
+        stars: 4,
+        note: "rooftop energy, great for a night out",
+        lat: 40.7398, lng: -74.0078
+      },
+      {
+        name: "The Gair",
+        neighborhood: "DUMBO, Brooklyn",
+        cat: "drink",
+        stars: 4,
+        note: "moody cocktail bar in a beautiful DUMBO building",
+        lat: 40.7033, lng: -73.9865
+      },
+      {
+        name: "Abraço",
+        neighborhood: "East Village",
+        cat: "cafe",
+        stars: 5,
+        note: "tiny, legendary espresso — olive oil cake is a must",
+        lat: 40.7262, lng: -73.9840
+      },
+      {
+        name: "Via Carota",
+        neighborhood: "West Village",
+        cat: "eat",
+        stars: 5,
+        note: "the carciofi and insalata verde — every single time",
+        lat: 40.7330, lng: -74.0024
+      },
+      {
+        name: "Lucien",
+        neighborhood: "East Village",
+        cat: "eat",
+        stars: 4,
+        note: "french bistro that feels like paris at midnight",
+        lat: 40.7234, lng: -73.9868
+      },
+      {
+        name: "Devoción",
+        neighborhood: "Williamsburg",
+        cat: "cafe",
+        stars: 4,
+        note: "gorgeous atrium, colombian beans, good for deep work",
+        lat: 40.7138, lng: -73.9624
+      },
+      {
+        name: "Attaboy",
+        neighborhood: "Lower East Side",
+        cat: "drink",
+        stars: 5,
+        note: "no menu — just tell them what you like. trust the bartender.",
+        lat: 40.7203, lng: -73.9884
+      },
+      {
+        name: "House of Yes",
+        neighborhood: "Bushwick",
+        cat: "dance",
+        stars: 5,
+        note: "the most unhinged dance floor in new york. wear something weird.",
+        lat: 40.7060, lng: -73.9234
+      },
+      {
+        name: "Café Integral",
+        neighborhood: "Nolita",
+        cat: "cafe",
+        stars: 4,
+        note: "nicaraguan coffee, minimalist vibes, great for morning writing",
+        lat: 40.7234, lng: -73.9950
+      },
+      {
+        name: "Don Angie",
+        neighborhood: "West Village",
+        cat: "eat",
+        stars: 5,
+        note: "the pinwheel lasagna is iconic — book ahead",
+        lat: 40.7313, lng: -74.0022
+      },
+      {
+        name: "Bembe",
+        neighborhood: "Williamsburg",
+        cat: "dance",
+        stars: 4,
+        note: "latin beats, tropical cocktails, late-night saturday energy",
+        lat: 40.7104, lng: -73.9655
+      }
+    ];
+
+    /* ========== CATEGORY CONFIG ========== */
+    var catEmoji = { cafe: "☕", eat: "🍽", drink: "🍸", dance: "💃" };
+    var catColor = { cafe: "#c94d75", eat: "#c9a12c", drink: "#8b6fc0", dance: "#2d9d6e" };
+    var catColorDark = { cafe: "#e879a0", eat: "#f5c563", drink: "#c4b5fd", dance: "#6ee7b7" };
+
+    function getColor(cat) {
+      var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      return isDark ? catColorDark[cat] : catColor[cat];
+    }
+
+    function starsHTML(n) {
+      var s = '';
+      for (var i = 0; i < 5; i++) s += i < n ? '★' : '☆';
+      return s;
+    }
+
+    /* ========== MAP ========== */
+    var map = L.map('map', { scrollWheelZoom: true }).setView([40.7280, -73.9900], 12);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      attribution: '© <a href="https://carto.com/">CARTO</a> © <a href="https://osm.org/copyright">OSM</a>',
+      subdomains: 'abcd', maxZoom: 19
+    }).addTo(map);
+
+    var markers = [];
+    var activeFilter = 'all';
+
+    function createMarker(spot, idx) {
+      var color = getColor(spot.cat);
+      var icon = L.divIcon({
+        className: '',
+        html: '<div style="width:28px;height:28px;border-radius:50%;background:' + color +
+              ';border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.25);display:flex;align-items:center;' +
+              'justify-content:center;font-size:13px;cursor:pointer;">' + catEmoji[spot.cat] + '</div>',
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+        popupAnchor: [0, -16]
+      });
+
+      var marker = L.marker([spot.lat, spot.lng], { icon: icon }).addTo(map);
+      marker.bindPopup(
+        '<div class="popup-name">' + catEmoji[spot.cat] + ' ' + spot.name + '</div>' +
+        '<div class="popup-hood">' + spot.neighborhood + '</div>' +
+        '<div class="popup-stars">' + starsHTML(spot.stars) + '</div>' +
+        (spot.note ? '<div class="popup-note">"' + spot.note + '"</div>' : '')
+      );
+      marker._spotIdx = idx;
+      marker.on('click', function () {
+        highlightCard(idx);
+      });
+      return marker;
+    }
+
+    function buildMarkers() {
+      markers.forEach(function (m) { map.removeLayer(m); });
+      markers = [];
+      spots.forEach(function (spot, i) {
+        if (activeFilter !== 'all' && spot.cat !== activeFilter) return;
+        markers.push(createMarker(spot, i));
+      });
+    }
+
+    /* ========== SPOT LIST ========== */
+    var spotList = document.getElementById('spotList');
+    var spotCount = document.getElementById('spotCount');
+
+    function buildList() {
+      spotList.innerHTML = '';
+      var shown = 0;
+      spots.forEach(function (spot, i) {
+        if (activeFilter !== 'all' && spot.cat !== activeFilter) return;
+        shown++;
+        var card = document.createElement('div');
+        card.className = 'spot-card';
+        card.setAttribute('data-cat', spot.cat);
+        card.setAttribute('data-idx', i);
+        card.innerHTML =
+          '<div class="spot-top">' +
+            '<span class="spot-name">' + spot.name + '</span>' +
+            '<span class="spot-cat">' + catEmoji[spot.cat] + '</span>' +
+          '</div>' +
+          '<div class="spot-hood">' + spot.neighborhood + '</div>' +
+          '<div class="spot-stars">' + starsHTML(spot.stars) + '</div>' +
+          (spot.note ? '<div class="spot-note">"' + spot.note + '"</div>' : '');
+
+        card.addEventListener('click', function () {
+          var m = markers.find(function (mk) { return mk._spotIdx === i; });
+          if (m) {
+            map.setView(m.getLatLng(), 15, { animate: true });
+            m.openPopup();
+          }
+          highlightCard(i);
+        });
+
+        card.addEventListener('mouseenter', function () {
+          var m = markers.find(function (mk) { return mk._spotIdx === i; });
+          if (m) m.openPopup();
+        });
+
+        spotList.appendChild(card);
+      });
+      spotCount.textContent = shown + ' spot' + (shown !== 1 ? 's' : '');
+    }
+
+    function highlightCard(idx) {
+      document.querySelectorAll('.spot-card').forEach(function (c) { c.classList.remove('active'); });
+      var card = document.querySelector('.spot-card[data-idx="' + idx + '"]');
+      if (card) {
+        card.classList.add('active');
+        card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+
+    /* ========== FILTERS ========== */
+    document.querySelectorAll('.filter-pill').forEach(function (pill) {
+      pill.addEventListener('click', function () {
+        document.querySelectorAll('.filter-pill').forEach(function (p) { p.classList.remove('active'); });
+        pill.classList.add('active');
+        activeFilter = pill.getAttribute('data-filter');
+        buildMarkers();
+        buildList();
+        // Fit map to visible markers
+        if (markers.length > 0) {
+          var group = L.featureGroup(markers);
+          map.fitBounds(group.getBounds().pad(0.15));
+        }
+      });
+    });
+
+    /* ========== INIT ========== */
+    buildMarkers();
+    buildList();
+  </script>
+</body>
+</html>
