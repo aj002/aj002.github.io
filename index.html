@@ -711,10 +711,29 @@
     <script src="assets/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mdbootstrap@4.20.0/js/mdb.min.js"
         integrity="sha256-NdbiivsvWt7VYCt6hYNT3h/th9vSTL4EDWeGs5SN3DA=" crossorigin="anonymous"></script>
-    <script src="assets/js/theme.js"></script>
-    <script src="assets/js/dark_mode.js"></script>
 
     <script>
+        /* ========== THEME TOGGLE (self-contained) ========== */
+        (function () {
+            function setTheme(mode) {
+                document.documentElement.setAttribute('data-theme', mode);
+                localStorage.setItem('theme', mode);
+            }
+            function toggle() {
+                var cur = document.documentElement.getAttribute('data-theme');
+                setTheme(cur === 'dark' ? 'light' : 'dark');
+            }
+            // Init: respect saved preference or system
+            var saved = localStorage.getItem('theme');
+            if (!saved || saved === 'null') {
+                saved = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+            }
+            setTheme(saved);
+            // Attach click
+            var btn = document.getElementById('light-toggle');
+            if (btn) btn.addEventListener('click', toggle);
+        })();
+
         // ---- Typing Effect ----
         const phrases = [
             "building AI for markets",
@@ -747,14 +766,6 @@
             entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
         }, { threshold: 0.1 });
         document.querySelectorAll('.fade-in').forEach(el => obs.observe(el));
-
-        // ---- Inline toggle fallback ----
-        (function () {
-            var btn = document.getElementById('light-toggle');
-            if (btn && typeof window.toggleTheme === 'function') {
-                btn.onclick = function () { window.toggleTheme(); };
-            }
-        })();
     </script>
 </body>
 </html>
