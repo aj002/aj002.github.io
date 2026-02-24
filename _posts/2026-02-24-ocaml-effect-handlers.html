@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>OCaml 5 Effect Handlers | Aastha Jain</title>
+    <meta name="author" content="Aastha Jain">
+    <meta name="description" content="Why every mainstream language got concurrency wrong, and how OCaml 5's effect handlers fix it by eliminating colored functions entirely.">
+    <link rel="stylesheet" href="../assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdbootstrap@4.20.0/css/mdb.min.css"
+        integrity="sha256-jpjYvU3G3N6nrrBwXJoVEYI/0zw8htfFnhT9ljN3JJw=" crossorigin="anonymous">
+    <link rel="stylesheet" href="../assets/css/academicons.min.css">
+    <link rel="stylesheet" type="text/css"
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,700;0,800;1,400&display=swap">
+    <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✦</text></svg>">
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        :root {
+            --bg: #fdf2f6; --surface: #f5e4ec; --card-bg: #fff7fa;
+            --rose: #c94d75; --rose-light: #e077a0; --lavender: #8b6fc0; --mint: #2d9d6e;
+            --gold: #c9a12c; --orange: #d97706;
+            --text-primary: #3d1f33; --text-secondary: #6b4561; --text-muted: #997a8d;
+            --border: rgba(201, 77, 117, 0.18);
+            --navbar-bg: rgba(253, 242, 246, 0.9);
+        }
+        html[data-theme="dark"] {
+            --bg: #1a0e1e; --surface: #231528; --card-bg: #2c1a33;
+            --rose: #e879a0; --rose-light: #f5a3be; --lavender: #c4b5fd; --mint: #6ee7b7;
+            --gold: #f5c563; --orange: #fbbf24;
+            --text-primary: #f5e8f0; --text-secondary: #c4a8b8; --text-muted: #806a78;
+            --border: rgba(232, 121, 160, 0.15);
+            --navbar-bg: rgba(26, 14, 30, 0.88);
+        }
+        * { box-sizing: border-box; }
+        body {
+            background: var(--bg) !important; color: var(--text-primary) !important;
+            font-family: 'DM Sans', sans-serif; padding: 0 !important;
+            -webkit-font-smoothing: antialiased;
+        }
+        .navbar {
+            background: var(--navbar-bg) !important;
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border-bottom: 1px solid var(--border) !important; box-shadow: none !important;
+        }
+        .navbar .nav-link, .navbar .navbar-brand { color: var(--text-primary) !important; font-family: 'DM Sans', sans-serif; }
+        .navbar .nav-link:hover { color: var(--rose) !important; text-decoration: none; }
+        .navbar .nav-item.active .nav-link { color: var(--rose) !important; font-weight: 600; }
+        .navbar-brand .font-weight-bold { font-weight: 700 !important; }
+        .icon-bar { background-color: var(--text-secondary) !important; }
+        #light-toggle { color: var(--text-muted); border: 0; background: inherit; padding: 0; }
+        #light-toggle:hover { color: var(--rose); }
+        p, h1, h2, h3, h4, h5, h6, em, div, li, span, strong { color: inherit; }
+
+        .post-page { max-width: 720px; margin: 0 auto; padding: 120px 24px 80px; }
+        .post-page .post-meta-bar {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+            color: var(--text-muted); margin-bottom: 16px;
+            display: flex; align-items: center; gap: 12px;
+        }
+        .post-page .post-meta-bar a { color: var(--rose) !important; text-decoration: none !important; }
+        .post-page .post-meta-bar a:hover { color: var(--lavender) !important; }
+        .post-page h1.post-title {
+            font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 800;
+            color: var(--text-primary); margin-bottom: 12px; line-height: 1.3;
+        }
+        .post-subtitle {
+            font-size: 1.05rem; color: var(--text-secondary); margin-bottom: 32px;
+            font-style: italic; line-height: 1.6;
+        }
+        .post-body { font-size: 1.02rem; line-height: 1.8; color: var(--text-secondary); }
+        .post-body h2 {
+            font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 700;
+            color: var(--text-primary) !important; margin-top: 2.8rem; margin-bottom: 1rem;
+            padding-bottom: 8px; border-bottom: 1px solid var(--border);
+        }
+        .post-body h4 { font-size: 1.1rem; font-weight: 700; color: var(--text-primary) !important; margin-top: 2rem; margin-bottom: 0.8rem; }
+        .post-body p { margin-bottom: 1.2rem; color: var(--text-secondary) !important; }
+        .post-body strong { color: var(--text-primary) !important; font-weight: 600; }
+        .post-body a { color: var(--rose) !important; text-decoration: none; border-bottom: 1px dashed rgba(232,121,160,0.35); }
+        .post-body a:hover { color: var(--lavender) !important; border-bottom-color: var(--lavender); }
+        .post-body blockquote {
+            border-left: 3px solid var(--rose); background: rgba(232,121,160,0.05);
+            border-radius: 0 10px 10px 0; padding: 16px 20px; margin: 1.5rem 0;
+        }
+        .post-body blockquote p { color: var(--text-primary) !important; font-style: italic; margin-bottom: 0; }
+        .post-body ul, .post-body ol { padding-left: 1.5rem; }
+        .post-body li { color: var(--text-secondary) !important; margin-bottom: 0.5rem; }
+        .post-body hr { border-top: 1px solid var(--border) !important; margin: 2rem 0; }
+
+        /* Code blocks */
+        .code-block {
+            background: var(--card-bg); border: 1px solid var(--border);
+            border-radius: 12px; padding: 20px 22px; margin: 1.5rem 0;
+            overflow-x: auto; position: relative;
+        }
+        .code-block .code-label {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.62rem;
+            color: var(--rose); text-transform: uppercase; letter-spacing: 0.12em;
+            margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+        }
+        .code-block .lang-dot {
+            width: 7px; height: 7px; border-radius: 50%; display: inline-block;
+        }
+        .code-block pre {
+            margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem;
+            line-height: 1.7; color: var(--text-primary); white-space: pre; overflow-x: auto;
+        }
+        .code-block .kw { color: var(--rose); font-weight: 600; }
+        .code-block .fn { color: var(--lavender); }
+        .code-block .str { color: var(--mint); }
+        .code-block .cmt { color: var(--text-muted); font-style: italic; }
+        .code-block .typ { color: var(--gold); }
+        .code-block .op { color: var(--text-muted); }
+
+        /* Callout box */
+        .callout-box {
+            background: var(--card-bg); border: 1px solid var(--border);
+            border-radius: 14px; padding: 20px 24px; margin: 1.5rem 0;
+        }
+        .callout-box .callout-title {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+            color: var(--rose); text-transform: uppercase; letter-spacing: 0.1em;
+            margin-bottom: 10px;
+        }
+        .callout-box p { font-size: 0.92rem; }
+        .callout-box p:last-child { margin-bottom: 0; }
+
+        /* Interactive color infection visualizer */
+        .color-viz {
+            background: var(--card-bg); border: 1px solid var(--border);
+            border-radius: 18px; padding: 28px; margin: 2rem 0;
+        }
+        .color-viz .viz-title {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+            color: var(--rose); text-transform: uppercase; letter-spacing: 0.12em;
+            margin-bottom: 6px;
+        }
+        .color-viz .viz-desc {
+            font-size: 0.85rem; color: var(--text-muted); margin-bottom: 18px;
+        }
+        .call-stack {
+            display: flex; flex-direction: column; gap: 0; align-items: center;
+        }
+        .call-frame {
+            width: 100%; max-width: 400px; padding: 10px 16px;
+            border-radius: 10px; font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem; text-align: center; transition: all 0.5s ease;
+            border: 2px solid transparent; position: relative;
+        }
+        .call-frame.sync {
+            background: rgba(139, 111, 192, 0.1); border-color: var(--lavender);
+            color: var(--lavender);
+        }
+        .call-frame.async-fn {
+            background: rgba(201, 77, 117, 0.1); border-color: var(--rose);
+            color: var(--rose);
+        }
+        .call-frame.neutral {
+            background: rgba(139, 111, 192, 0.06); border-color: var(--border);
+            color: var(--text-muted);
+        }
+        .call-arrow {
+            font-size: 0.9rem; color: var(--text-muted); margin: 4px 0;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .color-controls {
+            display: flex; gap: 10px; margin-top: 18px; justify-content: center; flex-wrap: wrap;
+        }
+        .color-btn {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+            padding: 8px 18px; border-radius: 100px; cursor: pointer; transition: all 0.2s;
+            border: 1px solid var(--border); background: var(--bg); color: var(--text-secondary);
+        }
+        .color-btn:hover { border-color: var(--rose); color: var(--rose); }
+        .color-btn.active { background: var(--rose); color: #fff; border-color: var(--rose); }
+        .color-legend {
+            display: flex; gap: 20px; justify-content: center; margin-top: 14px;
+            font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--text-muted);
+        }
+        .legend-item { display: flex; align-items: center; gap: 5px; }
+        .legend-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+        /* Effect handler simulator */
+        .effect-sim {
+            background: var(--card-bg); border: 1px solid var(--border);
+            border-radius: 18px; padding: 28px; margin: 2rem 0;
+        }
+        .effect-sim .sim-title {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+            color: var(--rose); text-transform: uppercase; letter-spacing: 0.12em;
+            margin-bottom: 6px;
+        }
+        .effect-sim .sim-desc {
+            font-size: 0.85rem; color: var(--text-muted); margin-bottom: 18px;
+        }
+        .sim-layout {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+        }
+        @media (max-width: 640px) { .sim-layout { grid-template-columns: 1fr; } }
+        .sim-panel {
+            background: var(--bg); border: 1px solid var(--border);
+            border-radius: 12px; padding: 16px; min-height: 260px;
+        }
+        .sim-panel-title {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.65rem;
+            color: var(--lavender); text-transform: uppercase; letter-spacing: 0.1em;
+            margin-bottom: 10px;
+        }
+        .sim-line {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.76rem;
+            padding: 4px 8px; border-radius: 6px; margin-bottom: 3px; transition: all 0.3s;
+            line-height: 1.6; color: var(--text-secondary);
+        }
+        .sim-line.highlight {
+            background: rgba(232, 121, 160, 0.1); color: var(--text-primary);
+            border-left: 2px solid var(--rose);
+        }
+        .sim-line .kw { color: var(--rose); font-weight: 600; }
+        .sim-line .fn { color: var(--lavender); }
+        .sim-line .str { color: var(--mint); }
+        .sim-line .cmt { color: var(--text-muted); font-style: italic; }
+        .sim-log {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.74rem;
+            line-height: 1.8;
+        }
+        .sim-log .log-entry {
+            padding: 3px 0; opacity: 0; animation: fadeInLog 0.3s forwards;
+        }
+        @keyframes fadeInLog { to { opacity: 1; } }
+        .log-perform { color: var(--rose); }
+        .log-handle { color: var(--lavender); }
+        .log-resume { color: var(--mint); }
+        .log-result { color: var(--gold); }
+        .log-arrow { color: var(--text-muted); }
+        .sim-controls {
+            display: flex; gap: 10px; margin-top: 16px; justify-content: center;
+        }
+        .sim-btn {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+            padding: 8px 20px; border-radius: 100px; cursor: pointer; transition: all 0.2s;
+            border: 1px solid var(--border); background: var(--bg); color: var(--text-secondary);
+        }
+        .sim-btn:hover { border-color: var(--rose); color: var(--rose); }
+        .sim-btn.primary { background: var(--rose); color: #fff; border-color: var(--rose); }
+        .sim-btn.primary:hover { background: var(--rose-light); border-color: var(--rose-light); }
+
+        /* Comparison table */
+        .compare-table {
+            width: 100%; border-collapse: collapse; margin: 1.5rem 0;
+            font-size: 0.88rem;
+        }
+        .compare-table th {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+            color: var(--rose); text-transform: uppercase; letter-spacing: 0.08em;
+            padding: 10px 14px; text-align: left;
+            border-bottom: 2px solid var(--border);
+        }
+        .compare-table td {
+            padding: 10px 14px; border-bottom: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+        .compare-table tr:last-child td { border-bottom: none; }
+        .compare-table .check { color: var(--mint); }
+        .compare-table .cross { color: var(--rose); }
+
+        .custom-footer {
+            background: var(--surface); border-top: 1px solid var(--border);
+            padding: 36px 24px; text-align: center;
+        }
+        .custom-footer .footer-text { font-size: 0.78rem; color: var(--text-muted); }
+    </style>
+</head>
+<body class="fixed-top-nav">
+    <header>
+        <nav id="navbar" class="navbar navbar-light navbar-expand-sm fixed-top">
+            <div class="container" style="max-width: 960px;">
+                <a class="navbar-brand title" href="../" style="font-family: 'DM Sans', sans-serif;">
+                    <span class="font-weight-bold">Aastha </span>Jain
+                </a>
+                <button class="navbar-toggler collapsed ml-auto" type="button" data-toggle="collapse" data-target="#navbarNav">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar top-bar"></span>
+                    <span class="icon-bar middle-bar"></span>
+                    <span class="icon-bar bottom-bar"></span>
+                </button>
+                <div class="collapse navbar-collapse text-right" id="navbarNav">
+                    <ul class="navbar-nav ml-auto flex-nowrap">
+                        <li class="nav-item"><a class="nav-link" href="../">about</a></li>
+                        <li class="nav-item active"><a class="nav-link" href="../blog/">writing<span class="sr-only">(current)</span></a></li>
+                        <li class="nav-item"><a class="nav-link" href="../publications/">research</a></li>
+                        <li class="nav-item"><a class="nav-link" href="../nyc/">nyc guide</a></li>
+                        <li class="toggle-container">
+                            <button id="light-toggle" title="Change theme">
+                                <i class="fa-solid fa-moon"></i><i class="fa-solid fa-sun"></i>
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="post-page">
+        <div class="post-meta-bar">
+            <a href="../blog/">← back to writing</a>
+            <span>·</span>
+            <span>February 2026</span>
+            <span>·</span>
+            <span>14 min read</span>
+        </div>
+
+        <h1 class="post-title">The End of Colored Functions: What OCaml 5 Gets Right About Effects</h1>
+        <p class="post-subtitle">Every mainstream language chose the same bad abstraction for side effects. OCaml 5 chose a different one — and it changes everything about how you think about program composition.</p>
+
+        <div class="post-body">
+
+            <p>In 2015, Bob Nystrom wrote an essay called <a href="https://journal.stuffwithstuff.com/2015/02/01/what-color-is-your-function/" target="_blank">"What Color is Your Function?"</a> that quietly diagnosed a disease that had already infected every mainstream language. The essay is short, funny, and devastating. If you haven't read it, the core idea is this:</p>
+
+            <blockquote><p>In languages with async/await, every function secretly has a color — synchronous (blue) or asynchronous (red). Red functions can call blue functions, but blue functions cannot call red functions. And once a function turns red, everything that calls it must turn red too.</p></blockquote>
+
+            <p>That essay is now eleven years old. And here's what's wild: <strong>almost nothing has changed.</strong> JavaScript, Python, Rust, C#, Dart, Kotlin — they all still have colored functions. They all still force you to choose sync or async at function definition time, and that choice propagates virally through your entire codebase.</p>
+
+            <p>OCaml 5, released in late 2022, took a completely different path. It introduced <strong>algebraic effect handlers</strong> — a mechanism that eliminates function coloring entirely. Not by removing async. Not by hiding it behind threads. By making side effects a <em>value you can intercept and reinterpret</em>, rather than a property baked into the function's type.</p>
+
+            <p>This matters. And almost nobody outside the PL research community is talking about it.</p>
+
+            <h2>The Infection Pattern</h2>
+
+            <p>Let me show you the problem concretely. Say you have a perfectly reasonable call stack:</p>
+
+            <div class="code-block">
+                <div class="code-label"><span class="lang-dot" style="background: var(--gold);"></span> JavaScript</div>
+<pre><span class="kw">function</span> <span class="fn">renderDashboard</span>() {
+  <span class="kw">const</span> data = <span class="fn">processData</span>(<span class="fn">getMetrics</span>());
+  <span class="kw">return</span> <span class="fn">formatChart</span>(data);
+}
+
+<span class="kw">function</span> <span class="fn">processData</span>(raw) {
+  <span class="kw">return</span> raw.<span class="fn">filter</span>(valid).<span class="fn">map</span>(normalize);
+}
+
+<span class="kw">function</span> <span class="fn">getMetrics</span>() {
+  <span class="kw">return</span> db.<span class="fn">query</span>(<span class="str">"SELECT * FROM metrics"</span>);
+}</pre>
+            </div>
+
+            <p>Now someone tells you <code>db.query</code> needs to be async. Here's what happens:</p>
+
+            <!-- Interactive: Function Color Infection Visualizer -->
+            <div class="color-viz" id="colorViz">
+                <div class="viz-title">⚡ Interactive: The Color Infection</div>
+                <div class="viz-desc">Click "Make db.query async" and watch the infection spread upward through the call stack.</div>
+
+                <div class="call-stack" id="callStack">
+                    <div class="call-frame neutral" id="frame-4" data-name="renderDashboard">renderDashboard()</div>
+                    <div class="call-arrow">↓ calls</div>
+                    <div class="call-frame neutral" id="frame-3" data-name="processData">processData()</div>
+                    <div class="call-arrow">↓ calls</div>
+                    <div class="call-frame neutral" id="frame-2" data-name="getMetrics">getMetrics()</div>
+                    <div class="call-arrow">↓ calls</div>
+                    <div class="call-frame neutral" id="frame-1" data-name="db.query">db.query()</div>
+                </div>
+
+                <div class="color-controls">
+                    <button class="color-btn" id="infectBtn" onclick="infectStack()">Make db.query async →</button>
+                    <button class="color-btn" id="resetColorBtn" onclick="resetColorViz()">Reset</button>
+                </div>
+
+                <div class="color-legend">
+                    <div class="legend-item"><span class="legend-dot" style="background: var(--lavender);"></span> sync (blue)</div>
+                    <div class="legend-item"><span class="legend-dot" style="background: var(--rose);"></span> async (red)</div>
+                </div>
+            </div>
+
+            <p>One change at the bottom of the stack forced <strong>every function above it</strong> to change its signature. <code>getMetrics</code> now returns a <code>Promise</code>. So <code>processData</code> needs <code>await</code>, which means it returns a <code>Promise</code>. So <code>renderDashboard</code> needs <code>await</code> too.</p>
+
+            <p>This isn't a JavaScript problem. It's a <strong>structural problem</strong> with how async/await works in every language that adopted it. The function's "color" — whether it's sync or async — is part of its <em>interface</em>, not its <em>implementation</em>. And interfaces propagate.</p>
+
+            <h4>Why this actually hurts</h4>
+
+            <p>It's not just annoying refactoring. Colored functions break composition in deep ways:</p>
+
+            <ul>
+                <li><strong>You can't use async inside <code>Array.map</code></strong> — <code>[1,2,3].map(async x => await fetch(x))</code> gives you <code>Promise[]</code>, not the values. You need <code>Promise.all</code>. Every higher-order function becomes a trap.</li>
+                <li><strong>You can't implement sync interfaces with async code.</strong> If a library expects a comparator <code>(a, b) => number</code>, you can't make it async. Period. Even if the comparison needs network data.</li>
+                <li><strong>Testing becomes harder.</strong> Your test wants to provide a mock synchronously, but the function signature demands a Promise. So your test becomes async too. The infection never stops.</li>
+                <li><strong>Two ecosystems diverge.</strong> Every utility function eventually gets duplicated: <code>map</code> and <code>mapAsync</code>, <code>retry</code> and <code>retryAsync</code>. Two parallel worlds that can't share code.</li>
+            </ul>
+
+            <h2>What OCaml 5 Did Instead</h2>
+
+            <p>OCaml 5 introduced <strong>effect handlers</strong> — based on decades of PL research on algebraic effects (Plotkin & Pretnar, 2009). The core insight is deceptively simple:</p>
+
+            <div class="callout-box">
+                <div class="callout-title">The Key Idea</div>
+                <p>Instead of baking side effects into a function's type, let the function <strong>declare what it needs</strong> (an effect) and let the <strong>caller decide how to provide it</strong> (a handler). The function doesn't know or care whether the effect is satisfied synchronously, asynchronously, or not at all.</p>
+            </div>
+
+            <p>Think of it like this. In async/await, a function that does I/O is permanently branded: "I am async." In OCaml 5, a function that does I/O just says: "I need some data" — and someone else decides how to get it.</p>
+
+            <p>Here's what the syntax looks like:</p>
+
+            <div class="code-block">
+                <div class="code-label"><span class="lang-dot" style="background: var(--orange);"></span> OCaml 5</div>
+<pre><span class="cmt">(* 1. Declare an effect — this is a "need" *)</span>
+<span class="kw">type</span> _ <span class="typ">Effect</span>.t += <span class="typ">Fetch</span> : <span class="typ">string</span> -> <span class="typ">string</span> <span class="typ">Effect</span>.t
+
+<span class="cmt">(* 2. Use it — looks completely normal *)</span>
+<span class="kw">let</span> <span class="fn">get_metrics</span> () =
+  <span class="fn">Effect</span>.perform (<span class="typ">Fetch</span> <span class="str">"https://api.example.com/metrics"</span>)
+
+<span class="kw">let</span> <span class="fn">process_data</span> raw =
+  raw |> <span class="fn">List</span>.filter valid |> <span class="fn">List</span>.map normalize
+
+<span class="kw">let</span> <span class="fn">render_dashboard</span> () =
+  <span class="kw">let</span> data = <span class="fn">process_data</span> (<span class="fn">get_metrics</span> ()) <span class="kw">in</span>
+  <span class="fn">format_chart</span> data</pre>
+            </div>
+
+            <p>Notice anything? <strong>No async. No await. No Promise.</strong> <code>get_metrics</code> looks like a regular function. <code>render_dashboard</code> looks like a regular function. That's because they <em>are</em> regular functions.</p>
+
+            <p>The magic is in the handler — the thing that decides what <code>Fetch</code> actually does:</p>
+
+            <div class="code-block">
+                <div class="code-label"><span class="lang-dot" style="background: var(--orange);"></span> OCaml 5 — The Handler</div>
+<pre><span class="cmt">(* 3. Handle the effect — the caller decides *)</span>
+<span class="kw">let</span> <span class="fn">run_with_http</span> f =
+  <span class="fn">Effect</span>.<span class="fn">Deep</span>.try_with f ()
+    { effc = <span class="kw">fun</span> (<span class="kw">type</span> a) (eff : a <span class="typ">Effect</span>.t) ->
+      <span class="kw">match</span> eff <span class="kw">with</span>
+      | <span class="typ">Fetch</span> url ->
+        <span class="typ">Some</span> (<span class="kw">fun</span> (k : (a, _) <span class="fn">Effect</span>.<span class="fn">Deep</span>.continuation) ->
+          <span class="kw">let</span> body = <span class="fn">Http</span>.get url <span class="kw">in</span>   <span class="cmt">(* do the actual I/O *)</span>
+          <span class="fn">Effect</span>.<span class="fn">Deep</span>.continue k body)   <span class="cmt">(* resume with result *)</span>
+      | _ -> <span class="typ">None</span> }
+
+<span class="cmt">(* Use it *)</span>
+<span class="kw">let</span> () = <span class="fn">run_with_http</span> render_dashboard</pre>
+            </div>
+
+            <p>The handler catches the <code>Fetch</code> effect, does the actual HTTP call, and <strong>resumes</strong> the original function with the result. The function that performed the effect doesn't know any of this happened — it just got back a string.</p>
+
+            <h2>Step Through It: How Perform and Resume Work</h2>
+
+            <p>This is where most explanations lose people. So let's trace it step by step.</p>
+
+            <!-- Interactive: Effect Handler Step-Through Simulator -->
+            <div class="effect-sim" id="effectSim">
+                <div class="sim-title">⚡ Interactive: Effect Handler Simulator</div>
+                <div class="sim-desc">Step through how <code>perform</code> and <code>continue</code> bounce control between the function and the handler.</div>
+
+                <div class="sim-layout">
+                    <div class="sim-panel">
+                        <div class="sim-panel-title">Code</div>
+                        <div id="simCode">
+                            <div class="sim-line" data-step="0"><span class="kw">let</span> <span class="fn">render_dashboard</span> () =</div>
+                            <div class="sim-line" data-step="1">  <span class="kw">let</span> raw = <span class="fn">perform</span> (<span class="typ">Fetch</span> url) <span class="kw">in</span></div>
+                            <div class="sim-line" data-step="3">  <span class="kw">let</span> data = <span class="fn">process</span> raw <span class="kw">in</span></div>
+                            <div class="sim-line" data-step="4">  <span class="fn">format</span> data</div>
+                            <div class="sim-line" data-step="-1" style="margin-top: 12px;"><span class="cmt">(* handler *)</span></div>
+                            <div class="sim-line" data-step="2">| <span class="typ">Fetch</span> url → <span class="fn">continue</span> k (<span class="fn">http_get</span> url)</div>
+                        </div>
+                    </div>
+                    <div class="sim-panel">
+                        <div class="sim-panel-title">Execution Log</div>
+                        <div class="sim-log" id="simLog"></div>
+                    </div>
+                </div>
+
+                <div class="sim-controls">
+                    <button class="sim-btn primary" id="stepBtn" onclick="stepSim()">Step →</button>
+                    <button class="sim-btn" onclick="resetSim()">Reset</button>
+                    <button class="sim-btn" onclick="autoPlay()">Auto-play</button>
+                </div>
+            </div>
+
+            <p>The critical thing to notice: <strong>the function's control flow is linear.</strong> It hits <code>perform</code>, gets suspended, the handler runs, and then the function <em>resumes exactly where it left off</em> with the value the handler provided. No callbacks. No <code>.then()</code>. No color change.</p>
+
+            <p>This is essentially a resumable exception. <code>perform</code> throws an effect upward. The handler catches it, does some work, and then — unlike exceptions — <em>gives a value back</em> and lets the original code continue.</p>
+
+            <h2>The Superpower: Swappable Handlers</h2>
+
+            <p>Here's where it gets genuinely powerful — and where my original take comes in.</p>
+
+            <p>Because the handler is <em>separate</em> from the function, you can swap handlers without touching a single line of your business logic. Same function, different interpretation:</p>
+
+            <div class="code-block">
+                <div class="code-label"><span class="lang-dot" style="background: var(--orange);"></span> Same function, three handlers</div>
+<pre><span class="cmt">(* Production: real HTTP *)</span>
+<span class="fn">run_with_http</span> render_dashboard
+
+<span class="cmt">(* Testing: deterministic mock *)</span>
+<span class="fn">run_with_mock</span> [<span class="str">"url1"</span>, <span class="str">"fake_data"</span>] render_dashboard
+
+<span class="cmt">(* Debugging: log every fetch, then do it *)</span>
+<span class="fn">run_with_logging</span> render_dashboard
+
+<span class="cmt">(* Batching: collect all fetches, do them in parallel *)</span>
+<span class="fn">run_with_batch</span> render_dashboard</pre>
+            </div>
+
+            <p>That last one is wild. A batching handler can intercept every <code>Fetch</code> effect, collect them all, fire them in parallel, and resume each function with its result. The function code doesn't change. It doesn't even know it's being batched. You get automatic request deduplication and parallelism <em>for free</em>.</p>
+
+            <p>This is what dependency injection <em>should</em> have been. Not a framework. Not annotations. Not a DI container. Just: "I need X" / "Here's how X works."</p>
+
+            <h2>The Deeper Insight: Effects Are a Composition Primitive</h2>
+
+            <p>Most discussions of effect handlers stop at "it's better async." I think that misses the real point.</p>
+
+            <p><strong>Effects are a universal composition primitive.</strong> They're not just for async — they can express exceptions, state, nondeterminism, logging, and concurrency. All with the same mechanism.</p>
+
+            <div class="code-block">
+                <div class="code-label"><span class="lang-dot" style="background: var(--orange);"></span> Effects beyond async</div>
+<pre><span class="cmt">(* State as an effect *)</span>
+<span class="kw">type</span> _ <span class="typ">Effect</span>.t += <span class="typ">Get</span> : <span class="typ">int</span> <span class="typ">Effect</span>.t
+<span class="kw">type</span> _ <span class="typ">Effect</span>.t += <span class="typ">Set</span> : <span class="typ">int</span> -> <span class="typ">unit</span> <span class="typ">Effect</span>.t
+
+<span class="cmt">(* Nondeterminism as an effect *)</span>
+<span class="kw">type</span> _ <span class="typ">Effect</span>.t += <span class="typ">Choose</span> : <span class="typ">bool</span> <span class="typ">Effect</span>.t
+
+<span class="cmt">(* A function that uses both — no framework needed *)</span>
+<span class="kw">let</span> <span class="fn">my_function</span> () =
+  <span class="kw">let</span> x = <span class="fn">perform</span> <span class="typ">Get</span> <span class="kw">in</span>
+  <span class="kw">if</span> <span class="fn">perform</span> <span class="typ">Choose</span> <span class="kw">then</span>
+    <span class="fn">perform</span> (<span class="typ">Set</span> (x + 1))
+  <span class="kw">else</span>
+    <span class="fn">perform</span> (<span class="typ">Set</span> (x * 2))</pre>
+            </div>
+
+            <p>A handler for <code>Choose</code> could explore both branches and collect all possible final states. That's a backtracking search engine in three lines. Or it could flip a coin. Or ask the user. The function doesn't care.</p>
+
+            <p>Here's the comparison that crystallizes it:</p>
+
+            <table class="compare-table">
+                <tr>
+                    <th>Property</th>
+                    <th>Async/Await</th>
+                    <th>Effect Handlers</th>
+                </tr>
+                <tr>
+                    <td>Function coloring</td>
+                    <td><span class="cross">✗</span> Yes — sync vs async</td>
+                    <td><span class="check">✓</span> No — all functions are the same</td>
+                </tr>
+                <tr>
+                    <td>Works with higher-order functions</td>
+                    <td><span class="cross">✗</span> map, filter etc. break</td>
+                    <td><span class="check">✓</span> Transparent — just works</td>
+                </tr>
+                <tr>
+                    <td>Testability</td>
+                    <td><span class="cross">✗</span> Tests must be async too</td>
+                    <td><span class="check">✓</span> Swap in a sync mock handler</td>
+                </tr>
+                <tr>
+                    <td>Batching / parallelism</td>
+                    <td><span class="cross">✗</span> Manual Promise.all</td>
+                    <td><span class="check">✓</span> Handler can batch automatically</td>
+                </tr>
+                <tr>
+                    <td>Beyond I/O</td>
+                    <td><span class="cross">✗</span> Only for async</td>
+                    <td><span class="check">✓</span> State, nondeterminism, logging, etc.</td>
+                </tr>
+                <tr>
+                    <td>Composability</td>
+                    <td><span class="cross">✗</span> Two parallel ecosystems</td>
+                    <td><span class="check">✓</span> Handlers compose and nest</td>
+                </tr>
+            </table>
+
+            <h2>Why This Should Matter to You (Even If You'll Never Write OCaml)</h2>
+
+            <p>I'm not writing this to convert you to OCaml. I'm writing it because <strong>effect handlers represent a different way of thinking about program structure</strong>, and that way of thinking is leaking into other languages whether they adopt the syntax or not.</p>
+
+            <p>React's hooks? They're effects in disguise. <code>useState</code>, <code>useEffect</code>, <code>useContext</code> — these are all "perform an effect, let the framework handle it." React is the handler. Your component is the function. Dan Abramov <a href="https://overreacted.io/algebraic-effects-for-the-rest-of-us/" target="_blank">has written about this explicitly</a>.</p>
+
+            <p>Python's context managers? Partial effects. <code>with open(file) as f</code> is really "perform a resource acquisition effect, clean up when done."</p>
+
+            <p>Dependency injection frameworks? Trying to solve the same problem effects solve natively — "I need X, someone else provides X" — but with runtime reflection, annotations, and configuration files instead of a language primitive.</p>
+
+            <p>The pattern is everywhere. We're building ad-hoc, half-broken versions of effect handlers in every language because the underlying abstraction is so obviously right. OCaml just gave it a proper name and a sound implementation.</p>
+
+            <h2>The Honest Limitations</h2>
+
+            <p>I should be fair. Effect handlers aren't all roses:</p>
+
+            <ul>
+                <li><strong>Tooling and ecosystem.</strong> OCaml's ecosystem is small. You won't find a package for everything. Jane Street's <code>Base</code> and <code>Core</code> libraries are excellent, but it's not npm.</li>
+                <li><strong>Learning curve.</strong> Continuations are hard to reason about. The type signatures for handlers are genuinely gnarly. <code>(a, _) Effect.Deep.continuation</code> is not something you glance at and understand.</li>
+                <li><strong>Performance overhead.</strong> Capturing and resuming continuations has a cost. It's been heavily optimized in OCaml 5 (using fiber-based continuations), but it's not zero.</li>
+                <li><strong>Type-level tracking.</strong> OCaml 5's effects are <em>untyped</em> — the type system doesn't track which effects a function might perform. Languages like <a href="https://koka-lang.github.io/" target="_blank">Koka</a> and <a href="https://www.unison-lang.org/" target="_blank">Unison</a> do track effects in the types, which is arguably more principled.</li>
+            </ul>
+
+            <p>That last point is important. OCaml took a pragmatic approach: get effect handlers into the language now, even without full type-level effect tracking. The bet is that practical benefits outweigh theoretical purity. It's a very OCaml thing to do.</p>
+
+            <h2>Where This Is Going</h2>
+
+            <p>Effect handlers are on a slow collision course with mainstream languages. <a href="https://without.boats/blog/the-registers-of-rust/" target="_blank">Rust is debating</a> how to make async less viral. WebAssembly is getting <a href="https://github.com/WebAssembly/stack-switching" target="_blank">stack switching</a>, which enables effect-handler-like patterns. Even Java's Project Loom (virtual threads) is an admission that colored functions were a mistake — it solves the problem by making everything "async" under the hood so you never have to write the word.</p>
+
+            <p>OCaml just got there first, with the most general solution. It's the difference between patching symptoms and fixing the root cause.</p>
+
+            <hr>
+
+            <p>The next time you're writing <code>async</code> in front of a function for the fourteenth time in a single refactor, just because one leaf function at the bottom of the call stack now talks to a database — remember that there's a language where that doesn't happen. Where a function that says "I need data" never has to know how the data arrives. Where the caller, not the callee, decides the execution strategy.</p>
+
+            <p>That's what OCaml 5 got right. Not better async. <strong>No async at all.</strong></p>
+
+        </div>
+    </div>
+
+    <footer class="custom-footer">
+        <div class="footer-text">© 2026 Aastha Jain · built with curiosity and too much matcha ✦</div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" crossorigin="anonymous"></script>
+    <script src="../assets/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mdbootstrap@4.20.0/js/mdb.min.js" crossorigin="anonymous"></script>
+
+    <script>
+    /* ========== THEME TOGGLE ========== */
+    (function () {
+        function setTheme(mode) {
+            document.documentElement.setAttribute('data-theme', mode);
+            localStorage.setItem('theme', mode);
+        }
+        function toggle() {
+            var cur = document.documentElement.getAttribute('data-theme');
+            setTheme(cur === 'dark' ? 'light' : 'dark');
+        }
+        var saved = localStorage.getItem('theme');
+        if (!saved || saved === 'null') {
+            saved = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+        }
+        setTheme(saved);
+        var btn = document.getElementById('light-toggle');
+        if (btn) btn.addEventListener('click', toggle);
+    })();
+
+    /* ========== COLOR INFECTION VISUALIZER ========== */
+    var infectionStep = 0;
+    var infectionTimer = null;
+    var frames = ['frame-1', 'frame-2', 'frame-3', 'frame-4'];
+    var frameNames = ['db.query()', 'getMetrics()', 'processData()', 'renderDashboard()'];
+    var asyncNames = ['async db.query()', 'async getMetrics()', 'async processData()', 'async renderDashboard()'];
+
+    function infectStack() {
+        if (infectionStep > 0) return;
+        document.getElementById('infectBtn').classList.add('active');
+        infectionTimer = setInterval(function () {
+            if (infectionStep >= frames.length) {
+                clearInterval(infectionTimer);
+                return;
+            }
+            var frame = document.getElementById(frames[infectionStep]);
+            frame.classList.remove('neutral', 'sync');
+            frame.classList.add('async-fn');
+            frame.textContent = asyncNames[infectionStep];
+            frame.style.transform = 'scale(1.04)';
+            setTimeout(function () { frame.style.transform = ''; }, 300);
+            infectionStep++;
+        }, 600);
+    }
+
+    function resetColorViz() {
+        clearInterval(infectionTimer);
+        infectionStep = 0;
+        document.getElementById('infectBtn').classList.remove('active');
+        frames.forEach(function (id, i) {
+            var frame = document.getElementById(id);
+            frame.className = 'call-frame neutral';
+            frame.textContent = frameNames[i];
+            frame.style.transform = '';
+        });
+    }
+
+    /* ========== EFFECT HANDLER SIMULATOR ========== */
+    var simStep = -1;
+    var simSteps = [
+        { line: 0, log: '<span class="log-arrow">→</span> entering <span class="log-result">render_dashboard</span>', type: 'enter' },
+        { line: 1, log: '<span class="log-perform">⚡ perform</span> Fetch url — <em>function suspends here</em>', type: 'perform' },
+        { line: 5, log: '<span class="log-handle">⬆ handler catches</span> Fetch → calls http_get(url)', type: 'handle' },
+        { line: 2, log: '<span class="log-resume">⬇ continue k</span> with response — <em>function resumes</em>', type: 'resume' },
+        { line: 3, log: '<span class="log-arrow">→</span> process raw data (pure computation)', type: 'compute' },
+        { line: 4, log: '<span class="log-arrow">→</span> format data → <span class="log-result">done ✓</span>', type: 'done' }
+    ];
+    // Map step indices to data-step values for highlighting
+    var simLineMap = [0, 1, -1, 3, 3, 4]; // which data-step to highlight at each simStep
+    // Actually let me map properly:
+    // simStep 0 -> data-step="0" (let render_dashboard)
+    // simStep 1 -> data-step="1" (let raw = perform)
+    // simStep 2 -> data-step="2" (handler line: | Fetch url →)
+    // simStep 3 -> data-step="3" (let data = process raw) -- resume point
+    // simStep 4 -> data-step="3" (let data = process raw)
+    // simStep 5 -> data-step="4" (format data)
+
+    function highlightSimLine(stepIdx) {
+        var dataSteps = [0, 1, 2, 3, 3, 4]; // which data-step for each simStep
+        var targetStep = dataSteps[stepIdx];
+        document.querySelectorAll('#simCode .sim-line').forEach(function (el) {
+            el.classList.remove('highlight');
+            if (parseInt(el.getAttribute('data-step')) === targetStep) {
+                el.classList.add('highlight');
+            }
+        });
+    }
+
+    function stepSim() {
+        simStep++;
+        if (simStep >= simSteps.length) {
+            document.getElementById('stepBtn').textContent = 'Done ✓';
+            document.getElementById('stepBtn').style.pointerEvents = 'none';
+            return;
+        }
+        var step = simSteps[simStep];
+        highlightSimLine(simStep);
+
+        var entry = document.createElement('div');
+        entry.className = 'log-entry';
+        entry.innerHTML = '<span style="color:var(--text-muted);font-size:0.6rem;">[' + (simStep + 1) + ']</span> ' + step.log;
+        document.getElementById('simLog').appendChild(entry);
+
+        document.getElementById('stepBtn').textContent = simStep < simSteps.length - 1 ? 'Step →' : 'Finish';
+    }
+
+    function resetSim() {
+        simStep = -1;
+        document.getElementById('simLog').innerHTML = '';
+        document.querySelectorAll('#simCode .sim-line').forEach(function (el) {
+            el.classList.remove('highlight');
+        });
+        document.getElementById('stepBtn').textContent = 'Step →';
+        document.getElementById('stepBtn').style.pointerEvents = '';
+    }
+
+    function autoPlay() {
+        resetSim();
+        var interval = setInterval(function () {
+            stepSim();
+            if (simStep >= simSteps.length - 1) clearInterval(interval);
+        }, 900);
+    }
+    </script>
+</body>
+</html>
