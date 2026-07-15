@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>side quests | Aastha Jain</title>
+  <meta name="author" content="Aastha Jain">
+  <meta name="description" content="Random projects, tiny experiments, and side quests.">
+  <link rel="stylesheet" href="../assets/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdbootstrap@4.20.0/css/mdb.min.css" crossorigin="anonymous">
+  <link rel="stylesheet" href="../assets/css/academicons.min.css">
+  <link rel="stylesheet" type="text/css"
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,700;0,800;1,400&display=swap">
+  <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>*</text></svg>">
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <style>
+    :root {
+      --bg: #fdf2f6; --surface: #f5e4ec; --card-bg: #fff7fa;
+      --rose: #c94d75; --rose-light: #e077a0; --lavender: #8b6fc0;
+      --text-primary: #3d1f33; --text-secondary: #6b4561; --text-muted: #997a8d;
+      --border: rgba(201, 77, 117, 0.18); --border-hover: rgba(201, 77, 117, 0.35);
+      --navbar-bg: rgba(253, 242, 246, 0.9);
+      --shadow-medium: rgba(100, 30, 60, 0.06);
+      --hero-grad-start: #3d1f33;
+    }
+    html[data-theme="dark"] {
+      --bg: #1a0e1e; --surface: #231528; --card-bg: #2c1a33;
+      --rose: #e879a0; --rose-light: #f5a3be; --lavender: #c4b5fd;
+      --text-primary: #f5e8f0; --text-secondary: #c4a8b8; --text-muted: #806a78;
+      --border: rgba(232, 121, 160, 0.15); --border-hover: rgba(232, 121, 160, 0.35);
+      --navbar-bg: rgba(26, 14, 30, 0.88);
+      --shadow-medium: rgba(0, 0, 0, 0.2);
+      --hero-grad-start: #f5e8f0;
+    }
+    * { box-sizing: border-box; }
+    body {
+      background: var(--bg) !important; color: var(--text-primary) !important;
+      font-family: 'DM Sans', sans-serif; padding: 0 !important;
+      -webkit-font-smoothing: antialiased;
+    }
+    .navbar {
+      background: var(--navbar-bg) !important; backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px); border-bottom: 1px solid var(--border) !important;
+      box-shadow: none !important;
+    }
+    .navbar .nav-link, .navbar .navbar-brand { color: var(--text-primary) !important; font-family: 'DM Sans', sans-serif; }
+    .navbar .nav-link:hover { color: var(--rose) !important; text-decoration: none; }
+    .navbar .nav-item.active .nav-link { color: var(--rose) !important; font-weight: 600; }
+    .navbar-brand .font-weight-bold { font-weight: 700 !important; }
+    .icon-bar { background-color: var(--text-secondary) !important; }
+    #light-toggle { color: var(--text-muted); border: 0; background: inherit; padding: 0; }
+    #light-toggle:hover { color: var(--rose); }
+    p, h1, h2, h3, h4, h5, h6, em, div, li, span, strong { color: inherit; }
+
+    .page-header { padding: 130px 24px 36px; text-align: center; }
+    .page-header h1 {
+      font-family: 'Playfair Display', serif; font-size: 2.4rem; font-weight: 800;
+      background: linear-gradient(135deg, var(--hero-grad-start) 0%, var(--rose-light) 60%, var(--lavender) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      margin-bottom: 10px;
+    }
+    .page-header .page-desc { font-size: 1rem; color: var(--text-secondary); max-width: 520px; margin: 0 auto; line-height: 1.7; }
+
+    .quests-content { max-width: 780px; margin: 0 auto; padding: 20px 24px 80px; }
+    .section-label {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; text-transform: uppercase;
+      letter-spacing: 0.18em; color: var(--rose); margin: 36px 0 16px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .section-label::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--border), transparent); }
+    .quest-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .quest-card {
+      background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px;
+      padding: 22px 24px; text-decoration: none !important; transition: all 0.3s ease;
+      min-height: 190px; display: flex; flex-direction: column;
+    }
+    .quest-card:hover { border-color: var(--border-hover); transform: translateY(-4px); box-shadow: 0 8px 24px var(--shadow-medium); }
+    .quest-meta { font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; color: var(--text-muted); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.08em; }
+    .quest-title { font-size: 1.06rem; font-weight: 650; color: var(--text-primary); margin-bottom: 10px; }
+    .quest-note { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.65; margin: 0; }
+    .quest-link { margin-top: auto; padding-top: 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--rose); }
+    .custom-footer { padding: 40px 24px; text-align: center; border-top: 1px solid var(--border); margin-top: 20px; }
+    .footer-text { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--text-muted); }
+
+    @media (max-width: 680px) {
+      .quest-grid { grid-template-columns: 1fr; }
+      .page-header h1 { font-size: 2rem; }
+      .quests-content { padding-left: 18px; padding-right: 18px; }
+    }
+  </style>
+</head>
+<body class="fixed-top-nav">
+  <header>
+    <nav id="navbar" class="navbar navbar-light navbar-expand-sm fixed-top">
+      <div class="container" style="max-width: 960px;">
+        <a class="navbar-brand title" href="../" style="font-family: 'DM Sans', sans-serif;">
+          <span class="font-weight-bold">Aastha </span>Jain
+        </a>
+        <button class="navbar-toggler collapsed ml-auto" type="button" data-toggle="collapse" data-target="#navbarNav">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar top-bar"></span>
+          <span class="icon-bar middle-bar"></span>
+          <span class="icon-bar bottom-bar"></span>
+        </button>
+        <div class="collapse navbar-collapse text-right" id="navbarNav">
+          <ul class="navbar-nav ml-auto flex-nowrap">
+            <li class="nav-item"><a class="nav-link" href="../">about</a></li>
+            <li class="nav-item"><a class="nav-link" href="../blog/">writing</a></li>
+            <li class="nav-item"><a class="nav-link" href="../publications/">research</a></li>
+            <li class="toggle-container">
+              <button id="light-toggle" title="Change theme">
+                <i class="fa-solid fa-moon"></i><i class="fa-solid fa-sun"></i>
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <div class="page-header">
+    <h1>side quests</h1>
+    <p class="page-desc">Things I do for fun.</p>
+  </div>
+
+  <main class="quests-content">
+    <div class="quest-grid">
+      <a class="quest-card" href="../nyc/">
+        <div class="quest-meta">city list</div>
+        <div class="quest-title">NYC places list</div>
+        <p class="quest-note">I like maintaining a running list of places in the city I actually like: food, coffee, bookstores, walks, and spots to send friends.</p>
+        <div class="quest-link">open</div>
+      </a>
+    </div>
+  </main>
+
+  <footer class="custom-footer">
+    <div class="footer-text">© 2026 Aastha Jain</div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" crossorigin="anonymous"></script>
+  <script src="../assets/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mdbootstrap@4.20.0/js/mdb.min.js" crossorigin="anonymous"></script>
+  <script>
+    (function () {
+      function setTheme(mode) {
+        document.documentElement.setAttribute('data-theme', mode);
+        localStorage.setItem('theme', mode);
+      }
+      function toggle() {
+        var cur = document.documentElement.getAttribute('data-theme');
+        setTheme(cur === 'dark' ? 'light' : 'dark');
+      }
+      var saved = localStorage.getItem('theme');
+      if (!saved || saved === 'null') {
+        saved = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+      }
+      setTheme(saved);
+      var btn = document.getElementById('light-toggle');
+      if (btn) btn.addEventListener('click', toggle);
+    })();
+  </script>
+</body>
+</html>

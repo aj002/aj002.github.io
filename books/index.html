@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>books | Aastha Jain</title>
+  <meta name="author" content="Aastha Jain">
+  <meta name="description" content="Books, notes, and sci-fi rabbit holes.">
+  <link rel="stylesheet" href="../assets/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdbootstrap@4.20.0/css/mdb.min.css" crossorigin="anonymous">
+  <link rel="stylesheet" href="../assets/css/academicons.min.css">
+  <link rel="stylesheet" type="text/css"
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,700;0,800;1,400&display=swap">
+  <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>*</text></svg>">
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <style>
+    :root {
+      --bg: #fdf2f6; --surface: #f5e4ec; --card-bg: #fff7fa;
+      --rose: #c94d75; --rose-light: #e077a0; --lavender: #8b6fc0;
+      --gold: #c9a12c; --mint: #2d9d6e;
+      --text-primary: #3d1f33; --text-secondary: #6b4561; --text-muted: #997a8d;
+      --border: rgba(201, 77, 117, 0.18); --border-hover: rgba(201, 77, 117, 0.35);
+      --navbar-bg: rgba(253, 242, 246, 0.9);
+      --shadow-medium: rgba(100, 30, 60, 0.06);
+      --hero-grad-start: #3d1f33;
+    }
+    html[data-theme="dark"] {
+      --bg: #1a0e1e; --surface: #231528; --card-bg: #2c1a33;
+      --rose: #e879a0; --rose-light: #f5a3be; --lavender: #c4b5fd;
+      --gold: #f5c563; --mint: #6ee7b7;
+      --text-primary: #f5e8f0; --text-secondary: #c4a8b8; --text-muted: #806a78;
+      --border: rgba(232, 121, 160, 0.15); --border-hover: rgba(232, 121, 160, 0.35);
+      --navbar-bg: rgba(26, 14, 30, 0.88);
+      --shadow-medium: rgba(0, 0, 0, 0.2);
+      --hero-grad-start: #f5e8f0;
+    }
+    * { box-sizing: border-box; }
+    body {
+      background: var(--bg) !important; color: var(--text-primary) !important;
+      font-family: 'DM Sans', sans-serif; padding: 0 !important;
+      -webkit-font-smoothing: antialiased;
+    }
+    .navbar {
+      background: var(--navbar-bg) !important; backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px); border-bottom: 1px solid var(--border) !important;
+      box-shadow: none !important;
+    }
+    .navbar .nav-link, .navbar .navbar-brand { color: var(--text-primary) !important; font-family: 'DM Sans', sans-serif; }
+    .navbar .nav-link:hover { color: var(--rose) !important; text-decoration: none; }
+    .navbar .nav-item.active .nav-link { color: var(--rose) !important; font-weight: 600; }
+    .navbar-brand .font-weight-bold { font-weight: 700 !important; }
+    .icon-bar { background-color: var(--text-secondary) !important; }
+    #light-toggle { color: var(--text-muted); border: 0; background: inherit; padding: 0; }
+    #light-toggle:hover { color: var(--rose); }
+    p, h1, h2, h3, h4, h5, h6, em, div, li, span, strong { color: inherit; }
+
+    .page-header { padding: 130px 24px 36px; text-align: center; }
+    .page-header h1 {
+      font-family: 'Playfair Display', serif; font-size: 2.4rem; font-weight: 800;
+      background: linear-gradient(135deg, var(--hero-grad-start) 0%, var(--rose-light) 60%, var(--lavender) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      margin-bottom: 10px;
+    }
+    .page-header .page-desc { font-size: 1rem; color: var(--text-secondary); max-width: 520px; margin: 0 auto; line-height: 1.7; }
+
+    .books-content { max-width: 860px; margin: 0 auto; padding: 20px 24px 80px; }
+    .shelf-intro {
+      background: var(--card-bg); border: 1px solid var(--border); border-radius: 18px;
+      padding: 22px 24px; margin-bottom: 24px;
+    }
+    .shelf-intro p { color: var(--text-secondary); line-height: 1.7; margin: 0; font-size: 0.94rem; }
+    .section-label {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; text-transform: uppercase;
+      letter-spacing: 0.18em; color: var(--rose); margin: 36px 0 16px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .section-label::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--border), transparent); }
+    .section-note { color: var(--text-muted); font-size: 0.86rem; line-height: 1.65; margin: -6px 0 16px; }
+    .book-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-bottom: 8px; }
+    .book-card {
+      background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px;
+      padding: 22px 24px; transition: all 0.3s ease;
+    }
+    .book-card:hover { border-color: var(--border-hover); transform: translateX(5px); box-shadow: 0 8px 24px var(--shadow-medium); }
+    .book-meta { font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.08em; }
+    .book-title { font-size: 1.06rem; font-weight: 650; color: var(--text-primary); margin-bottom: 4px; }
+    .book-title a {
+      color: inherit; text-decoration: none !important;
+      border-bottom: 1px dashed var(--border-hover); transition: color 0.2s ease, border-color 0.2s ease;
+    }
+    .book-title a:hover { color: var(--rose); border-bottom-color: var(--rose); }
+    .book-author { font-size: 0.86rem; color: var(--text-secondary); margin-bottom: 10px; }
+    .book-note { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.65; margin: 0; }
+    .chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+    .chip {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; text-transform: uppercase;
+      letter-spacing: 0.07em; padding: 3px 10px; border-radius: 999px;
+      border: 1px solid var(--border); color: var(--text-muted);
+    }
+    .chip.v-loved { color: var(--rose); border-color: rgba(201, 77, 117, 0.4); }
+    .chip.v-mind { color: var(--lavender); border-color: rgba(139, 111, 192, 0.4); }
+    .chip.v-comfort { color: var(--gold); border-color: rgba(201, 161, 44, 0.4); }
+    .chip.v-argue { color: var(--mint); border-color: rgba(45, 157, 110, 0.4); }
+    .top-grid { display: grid; grid-template-columns: 1fr; gap: 14px; margin-bottom: 8px; }
+    .top-card { border-left: 3px solid var(--rose); padding: 24px 28px; }
+    .top-card .book-title { font-size: 1.2rem; }
+    .stack-list .stack-title a {
+      color: inherit; text-decoration: none !important;
+      border-bottom: 1px dashed var(--border-hover);
+    }
+    .stack-list .stack-title a:hover { color: var(--rose); border-bottom-color: var(--rose); }
+    .stack-list {
+      background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px;
+      padding: 10px 0; margin: 0; list-style: none;
+    }
+    .stack-list li {
+      display: grid; grid-template-columns: minmax(180px, 0.9fr) 1.3fr; gap: 18px;
+      padding: 13px 22px; border-bottom: 1px solid var(--border); color: var(--text-secondary);
+      font-size: 0.9rem; line-height: 1.55;
+    }
+    .stack-list li:last-child { border-bottom: 0; }
+    .stack-title { color: var(--text-primary); font-weight: 650; }
+    .custom-footer { padding: 40px 24px; text-align: center; border-top: 1px solid var(--border); margin-top: 20px; }
+    .footer-text { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--text-muted); }
+
+    @media (max-width: 576px) {
+      .page-header h1 { font-size: 2rem; }
+      .books-content { padding-left: 18px; padding-right: 18px; }
+      .book-grid { grid-template-columns: 1fr; }
+      .stack-list li { grid-template-columns: 1fr; gap: 4px; }
+    }
+  </style>
+</head>
+<body class="fixed-top-nav">
+  <header>
+    <nav id="navbar" class="navbar navbar-light navbar-expand-sm fixed-top">
+      <div class="container" style="max-width: 960px;">
+        <a class="navbar-brand title" href="../" style="font-family: 'DM Sans', sans-serif;">
+          <span class="font-weight-bold">Aastha </span>Jain
+        </a>
+        <button class="navbar-toggler collapsed ml-auto" type="button" data-toggle="collapse" data-target="#navbarNav">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar top-bar"></span>
+          <span class="icon-bar middle-bar"></span>
+          <span class="icon-bar bottom-bar"></span>
+        </button>
+        <div class="collapse navbar-collapse text-right" id="navbarNav">
+          <ul class="navbar-nav ml-auto flex-nowrap">
+            <li class="nav-item"><a class="nav-link" href="../">about</a></li>
+            <li class="nav-item"><a class="nav-link" href="../blog/">writing</a></li>
+            <li class="nav-item"><a class="nav-link" href="../publications/">research</a></li>
+            <li class="toggle-container">
+              <button id="light-toggle" title="Change theme">
+                <i class="fa-solid fa-moon"></i><i class="fa-solid fa-sun"></i>
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <div class="page-header">
+    <h1>books</h1>
+    <p class="page-desc">A slowly expanding shelf of books I keep thinking about, stealing frameworks from, or recommending too aggressively.</p>
+  </div>
+
+  <main class="books-content">
+    <div class="shelf-intro">
+      <p>
+        This is less a canon and more a map of recurring obsessions: competence, weird systems, friendship under pressure,
+        invented worlds, and mathy futures. Titles link to Goodreads. Start with the all-time shelf; everything below it
+        is sorted by the itch it scratches.
+      </p>
+    </div>
+
+    <div class="section-label">The All-Time Shelf</div>
+    <p class="section-note">The books I actually push into people's hands. Longer notes because I can't help it.</p>
+    <div class="top-grid">
+      <article class="book-card top-card">
+        <div class="chip-row"><span class="chip">epic fantasy</span><span class="chip v-comfort">comfort reread</span><span class="chip v-loved">all-time</span></div>
+        <div class="book-title"><a href="https://www.goodreads.com/search?q=The+Lord+of+the+Rings+Tolkien" target="_blank" rel="noopener">The Lord of the Rings</a></div>
+        <div class="book-author">J.R.R. Tolkien</div>
+        <p class="book-note">The book I measure other worlds against. I love that it refuses to be efficient — the walking, the songs, the genealogies all make Middle-earth feel older than the story passing through it. Every reread I find myself attached to a different character, which I think is the real test of a book: it changes because I did. When everything in my life is optimized for speed, this is my reminder that endurance is also a skill.</p>
+      </article>
+      <article class="book-card top-card">
+        <div class="chip-row"><span class="chip">systems epic</span><span class="chip v-loved">all-time</span></div>
+        <div class="book-title"><a href="https://www.goodreads.com/search?q=Dune+Frank+Herbert" target="_blank" rel="noopener">Dune</a></div>
+        <div class="book-author">Frank Herbert</div>
+        <p class="book-note">I came for the sandworms and stayed for the incentive design. Ecology, religion, spice markets, imperial politics — it reads like someone stress-testing a civilization and publishing the results as a novel. Spending my days around markets has only made it better: the idea that every lever you pull has a second-order consequence waiting feels less like fiction and more like documentation.</p>
+      </article>
+      <article class="book-card top-card">
+        <div class="chip-row"><span class="chip">space puzzle</span><span class="chip v-loved">all-time</span></div>
+        <div class="book-title"><a href="https://www.goodreads.com/search?q=Project+Hail+Mary+Andy+Weir" target="_blank" rel="noopener">Project Hail Mary</a></div>
+        <div class="book-author">Andy Weir</div>
+        <p class="book-note">I expected to enjoy the engineering puzzles, and I did. I did not expect the friendship to be the thing that stuck — it turns a competence fantasy into something much warmer. It is the most sincere book I have read in years, and I finished it in two sittings and immediately started recommending it to people who claim they don't read sci-fi.</p>
+      </article>
+      <article class="book-card top-card">
+        <div class="chip-row"><span class="chip">short stories</span><span class="chip v-mind">rewired me</span></div>
+        <div class="book-title"><a href="https://www.goodreads.com/search?q=Exhalation+Ted+Chiang" target="_blank" rel="noopener">Exhalation</a></div>
+        <div class="book-author">Ted Chiang</div>
+        <p class="book-note">Ted Chiang writes the way I wish proofs read: one clean idea, carried carefully, with a human cost attached. I ration these stories because reading two in a row feels greedy. If you only read one, make it the title story — it is the gentlest piece of existential dread I know.</p>
+      </article>
+    </div>
+
+    <div class="section-label">Myth, Wonder, Old Magic</div>
+    <p class="section-note">Books I read for atmosphere as much as plot. I like when a world feels lived in before the first page starts.</p>
+    <div class="book-grid">
+      <article class="book-card">
+        <div class="chip-row"><span class="chip">science fantasy</span><span class="chip v-comfort">childhood read</span></div>
+        <div class="book-title"><a href="https://www.goodreads.com/search?q=A+Wrinkle+in+Time+Madeleine+L%27Engle" target="_blank" rel="noopener">A Wrinkle in Time</a></div>
+        <div class="book-author">Madeleine L'Engle</div>
+        <p class="book-note">Written for kids who are too intense for their age and know it. The tesseract math is really emotional geometry, but Meg's anger and loyalty still feel precise.</p>
+      </article>
+      <article class="book-card">
+        <div class="chip-row"><span class="chip">quiet labyrinth</span><span class="chip v-loved">loved</span></div>
+        <div class="book-title"><a href="https://www.goodreads.com/search?q=Piranesi+Susanna+Clarke" target="_blank" rel="noopener">Piranesi</a></div>
+        <div class="book-author">Susanna Clarke</div>
+        <p class="book-note">A tiny book that feels enormous. It treats solitude as something sacred without pretending it is harmless.</p>
+      </article>
+    </div>
+
+    <div class="section-label">Competence, Contact, Survival</div>
+    <p class="section-note">The part of the shelf for smart people doing constrained problem-solving under absurd pressure.</p>
+    <div class="book-grid">
+      <article class="book-card">
+        <div class="chip-row"><span class="chip">survival math</span><span class="chip v-loved">loved</span></div>
+        <div class="book-title"><a href="https://www.goodreads.com/search?q=The+Martian+Andy+Weir" target="_blank" rel="noopener">The Martian</a></div>
+        <div class="book-author">Andy Weir</div>
+        <p class="book-note">Define the problem, inventory the constraints, do the next useful thing. Optimism as an operating procedure, not a mood.</p>
+      </article>
+      <article class="book-card">
+        <div class="chip-row"><span class="chip">first contact</span></div>
+        <div class="book-title"><a href="https://www.goodreads.com/search?q=Contact+Carl+Sagan" target="_blank" rel="noopener">Contact</a></div>
+        <div class="book-author">Carl Sagan</div>
+        <p class="book-note">Really a book about evidence and longing, and how hard it is to stay intellectually honest when the stakes turn personal.</p>
+      </article>
+      <article class="book-card">
+        <div class="chip-row"><span class="chip">big dumb object</span></div>
+        <div class="book-title"><a href="https://www.goodreads.com/search?q=Rendezvous+with+Rama+Arthur+C+Clarke" target="_blank" rel="noopener">Rendezvous with Rama</a></div>
+        <div class="book-author">Arthur C. Clarke</div>
+        <p class="book-note">The restraint is the charm — it never over-explains the mystery. Awe, left deliberately unresolved.</p>
+      </article>
+      <article class="book-card">
+        <div class="chip-row"><span class="chip">evolutionary epic</span><span class="chip v-mind">rewired me</span></div>
+        <div class="book-title"><a href="https://www.goodreads.com/search?q=Children+of+Time+Adrian+Tchaikovsky" target="_blank" rel="noopener">Children of Time</a></div>
+        <div class="book-author">Adrian Tchaikovsky</div>
+        <p class="book-note">The best "intelligence doesn't have to look like us" book I know. I came out of it with genuine respect for spiders, which I resent.</p>
+      </article>
+      <article class="book-card">
+        <div class="chip-row"><span class="chip">cosmic dread</span><span class="chip v-argue">still arguing with it</span></div>
+        <div class="book-title"><a href="https://www.goodreads.com/search?q=The+Three-Body+Problem+Cixin+Liu" target="_blank" rel="noopener">The Three-Body Problem</a></div>
+        <div class="book-author">Cixin Liu</div>
+        <p class="book-note">Cold, strange, not cuddly. Civilization as a fragile local minimum rather than a guarantee.</p>
+      </article>
+    </div>
+
+    <div class="section-label">Posthuman Brainworms</div>
+    <p class="section-note">Messier books, sharper edges. I like them because they feel like futures with too many tabs open.</p>
+    <div class="book-grid">
+      <article class="book-card">
+        <div class="chip-row"><span class="chip">singularity fiction</span><span class="chip v-mind">rewired me</span></div>
+        <div class="book-title"><a href="https://www.goodreads.com/search?q=Accelerando+Charles+Stross" target="_blank" rel="noopener">Accelerando</a></div>
+        <div class="book-author">Charles Stross</div>
+        <p class="book-note">Not cozy reading; a bandwidth event. Technology outrunning manners, markets, and families in real time.</p>
+      </article>
+      <article class="book-card">
+        <div class="chip-row"><span class="chip">cyberpunk</span></div>
+        <div class="book-title"><a href="https://www.goodreads.com/search?q=Snow+Crash+Neal+Stephenson" target="_blank" rel="noopener">Snow Crash</a></div>
+        <div class="book-author">Neal Stephenson</div>
+        <p class="book-note">Maximalist and ridiculous in exactly the way early internet mythology deserves. Velocity forgives everything, including a hero named Hiro Protagonist.</p>
+      </article>
+      <article class="book-card">
+        <div class="chip-row"><span class="chip">classic cyberpunk</span></div>
+        <div class="book-title"><a href="https://www.goodreads.com/search?q=Neuromancer+William+Gibson" target="_blank" rel="noopener">Neuromancer</a></div>
+        <div class="book-author">William Gibson</div>
+        <p class="book-note">Mostly vibes, but historically important vibes — the aesthetic operating system half of tech culture still runs on.</p>
+      </article>
+      <article class="book-card">
+        <div class="chip-row"><span class="chip">hostile cognition</span><span class="chip v-argue">still arguing with it</span></div>
+        <div class="book-title"><a href="https://www.goodreads.com/search?q=Blindsight+Peter+Watts" target="_blank" rel="noopener">Blindsight</a></div>
+        <div class="book-author">Peter Watts</div>
+        <p class="book-note">Unpleasant in a productive way. Consciousness as a weird, expensive side effect instead of a crown.</p>
+      </article>
+      <article class="book-card">
+        <div class="chip-row"><span class="chip">identity math</span><span class="chip v-mind">rewired me</span></div>
+        <div class="book-title"><a href="https://www.goodreads.com/search?q=Permutation+City+Greg+Egan" target="_blank" rel="noopener">Permutation City</a></div>
+        <div class="book-author">Greg Egan</div>
+        <p class="book-note">Fiction behaving like a philosophical proof with vertigo. Takes copies and simulated selves more seriously than is comfortable.</p>
+      </article>
+    </div>
+
+    <div class="section-label">Systems, Risk, Taste</div>
+    <p class="section-note">Books I want near the same shelf as markets, research, taste, and how people fool themselves.</p>
+    <div class="book-grid">
+      <article class="book-card">
+        <div class="chip-row"><span class="chip">probability</span><span class="chip v-argue">still arguing with it</span></div>
+        <div class="book-title"><a href="https://www.goodreads.com/search?q=Fooled+by+Randomness+Taleb" target="_blank" rel="noopener">Fooled by Randomness</a></div>
+        <div class="book-author">Nassim Nicholas Taleb</div>
+        <p class="book-note">Annoying and useful, which is a powerful combination. A warning label for narratives that are too smooth after the fact.</p>
+      </article>
+      <article class="book-card">
+        <div class="chip-row"><span class="chip">risk history</span></div>
+        <div class="book-title"><a href="https://www.goodreads.com/search?q=Against+the+Gods+Peter+Bernstein" target="_blank" rel="noopener">Against the Gods</a></div>
+        <div class="book-author">Peter L. Bernstein</div>
+        <p class="book-note">Humans slowly learning to put numbers on uncertainty, then immediately getting overconfident about the numbers.</p>
+      </article>
+      <article class="book-card">
+        <div class="chip-row"><span class="chip">recursion</span><span class="chip v-comfort">comfort reread</span></div>
+        <div class="book-title"><a href="https://www.goodreads.com/search?q=Godel+Escher+Bach+Hofstadter" target="_blank" rel="noopener">Gödel, Escher, Bach</a></div>
+        <div class="book-author">Douglas Hofstadter</div>
+        <p class="book-note">A brilliant attic of recursion, minds, music, and self-reference. I wander in for one chapter and lose an afternoon.</p>
+      </article>
+      <article class="book-card">
+        <div class="chip-row"><span class="chip">progress</span><span class="chip v-argue">still arguing with it</span></div>
+        <div class="book-title"><a href="https://www.goodreads.com/search?q=The+Beginning+of+Infinity+David+Deutsch" target="_blank" rel="noopener">The Beginning of Infinity</a></div>
+        <div class="book-author">David Deutsch</div>
+        <p class="book-note">I argue with half of it, which is exactly why I keep it around. Takes explanations more seriously than almost anything else I've read.</p>
+      </article>
+    </div>
+
+    <div class="section-label">Next To Fold In</div>
+    <p class="section-note">The queue. These get promoted to full cards as I finish them and have something worth saying.</p>
+    <ul class="stack-list">
+      <li><span class="stack-title"><a href="https://www.goodreads.com/search?q=Hyperion+Dan+Simmons" target="_blank" rel="noopener">Hyperion</a></span><span>For structure, pilgrimage, and literary sci-fi with teeth.</span></li>
+      <li><span class="stack-title"><a href="https://www.goodreads.com/search?q=The+Left+Hand+of+Darkness+Le+Guin" target="_blank" rel="noopener">The Left Hand of Darkness</a></span><span>For anthropology, gender, and cold planets with warm moral questions.</span></li>
+      <li><span class="stack-title"><a href="https://www.goodreads.com/search?q=The+Dispossessed+Le+Guin" target="_blank" rel="noopener">The Dispossessed</a></span><span>For politics, physics, and the cost of actually living inside an ideology.</span></li>
+      <li><span class="stack-title"><a href="https://www.goodreads.com/search?q=Anathem+Neal+Stephenson" target="_blank" rel="noopener">Anathem</a></span><span>For monastery math, long attention spans, and Stephenson at full density.</span></li>
+      <li><span class="stack-title"><a href="https://www.goodreads.com/search?q=Seveneves+Neal+Stephenson" target="_blank" rel="noopener">Seveneves</a></span><span>For orbital mechanics, civilization triage, and the urge to explain everything.</span></li>
+      <li><span class="stack-title"><a href="https://www.goodreads.com/search?q=All+Systems+Red+Martha+Wells" target="_blank" rel="noopener">The Murderbot Diaries</a></span><span>For competence, social anxiety, and the most relatable security unit in space.</span></li>
+      <li><span class="stack-title"><a href="https://www.goodreads.com/search?q=We+Are+Legion+We+Are+Bob+Dennis+Taylor" target="_blank" rel="noopener">We Are Legion (We Are Bob)</a></span><span>For light, funny, engineering-forward space expansion.</span></li>
+      <li><span class="stack-title"><a href="https://www.goodreads.com/search?q=Stories+of+Your+Life+and+Others+Ted+Chiang" target="_blank" rel="noopener">Stories of Your Life and Others</a></span><span>For more Ted Chiang, when I want one idea carried perfectly.</span></li>
+    </ul>
+  </main>
+
+  <footer class="custom-footer">
+    <div class="footer-text">© 2026 Aastha Jain</div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" crossorigin="anonymous"></script>
+  <script src="../assets/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mdbootstrap@4.20.0/js/mdb.min.js" crossorigin="anonymous"></script>
+  <script>
+    (function () {
+      function setTheme(mode) {
+        document.documentElement.setAttribute('data-theme', mode);
+        localStorage.setItem('theme', mode);
+      }
+      function toggle() {
+        var cur = document.documentElement.getAttribute('data-theme');
+        setTheme(cur === 'dark' ? 'light' : 'dark');
+      }
+      var saved = localStorage.getItem('theme');
+      if (!saved || saved === 'null') {
+        saved = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+      }
+      setTheme(saved);
+      var btn = document.getElementById('light-toggle');
+      if (btn) btn.addEventListener('click', toggle);
+    })();
+  </script>
+</body>
+</html>

@@ -7,7 +7,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>OCaml 5 Effect Handlers | Aastha Jain</title>
     <meta name="author" content="Aastha Jain">
-    <meta name="description" content="Why every mainstream language got concurrency wrong, and how OCaml 5's effect handlers fix it by eliminating colored functions entirely.">
+    <meta name="description" content="Notes on OCaml 5's effect handlers, function coloring, and why the idea is useful beyond OCaml.">
     <link rel="stylesheet" href="../assets/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdbootstrap@4.20.0/css/mdb.min.css"
         integrity="sha256-jpjYvU3G3N6nrrBwXJoVEYI/0zw8htfFnhT9ljN3JJw=" crossorigin="anonymous">
@@ -246,25 +246,6 @@
         .sim-btn.primary { background: var(--rose); color: #fff; border-color: var(--rose); }
         .sim-btn.primary:hover { background: var(--rose-light); border-color: var(--rose-light); }
 
-        /* Comparison table */
-        .compare-table {
-            width: 100%; border-collapse: collapse; margin: 1.5rem 0;
-            font-size: 0.88rem;
-        }
-        .compare-table th {
-            font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
-            color: var(--rose); text-transform: uppercase; letter-spacing: 0.08em;
-            padding: 10px 14px; text-align: left;
-            border-bottom: 2px solid var(--border);
-        }
-        .compare-table td {
-            padding: 10px 14px; border-bottom: 1px solid var(--border);
-            color: var(--text-secondary);
-        }
-        .compare-table tr:last-child td { border-bottom: none; }
-        .compare-table .check { color: var(--mint); }
-        .compare-table .cross { color: var(--rose); }
-
         .custom-footer {
             background: var(--surface); border-top: 1px solid var(--border);
             padding: 36px 24px; text-align: center;
@@ -290,7 +271,6 @@
                         <li class="nav-item"><a class="nav-link" href="../">about</a></li>
                         <li class="nav-item active"><a class="nav-link" href="../blog/">writing<span class="sr-only">(current)</span></a></li>
                         <li class="nav-item"><a class="nav-link" href="../publications/">research</a></li>
-                        <li class="nav-item"><a class="nav-link" href="../nyc/">nyc guide</a></li>
                         <li class="toggle-container">
                             <button id="light-toggle" title="Change theme">
                                 <i class="fa-solid fa-moon"></i><i class="fa-solid fa-sun"></i>
@@ -307,28 +287,30 @@
             <a href="../blog/">← back to writing</a>
             <span>·</span>
             <span>February 2026</span>
-            <span>·</span>
-            <span>14 min read</span>
         </div>
 
-        <h1 class="post-title">The End of Colored Functions: What OCaml 5 Gets Right About Effects</h1>
-        <p class="post-subtitle">Every mainstream language chose the same bad abstraction for side effects. OCaml 5 chose a different one — and it changes everything about how you think about program composition.</p>
+        <h1 class="post-title">OCaml 5, Effect Handlers, and the Slow Death of Colored Functions</h1>
+        <p class="post-subtitle">A gentle introduction to effect handlers, why async changes spread through a call stack, and the alternative OCaml 5 offers.</p>
 
         <div class="post-body">
 
-            <p>In 2015, Bob Nystrom wrote an essay called <a href="https://journal.stuffwithstuff.com/2015/02/01/what-color-is-your-function/" target="_blank">"What Color is Your Function?"</a> that quietly diagnosed a disease that had already infected every mainstream language. The essay is short, funny, and devastating. If you haven't read it, the core idea is this:</p>
+            <p>This started with a frustrating refactor. I needed one function at the bottom of a Python service to query a database asynchronously. That single change forced every function calling it—and several tests—to adopt an asynchronous interface too.</p>
+
+            <p>If OCaml is unfamiliar: it is a statically typed functional programming language used in areas including compilers, program analysis, and finance. OCaml 5 added support for multicore parallelism along with a feature called <strong>effect handlers</strong>. You do not need to know OCaml syntax to follow the idea.</p>
+
+            <p>In plain language, an effect lets a function pause and ask the surrounding program to do something on its behalf: fetch data, yield to a scheduler, read some state, or choose between alternatives. A <strong>handler</strong> decides what that request means and can then resume the function with a result.</p>
+
+            <p>Somewhere in the middle of that I reread Bob Nystrom's 2015 essay, <a href="https://journal.stuffwithstuff.com/2015/02/01/what-color-is-your-function/" target="_blank">"What Color is Your Function?"</a> If you haven't read it, the core idea:</p>
 
             <blockquote><p>In languages with async/await, every function secretly has a color — synchronous (blue) or asynchronous (red). Red functions can call blue functions, but blue functions cannot call red functions. And once a function turns red, everything that calls it must turn red too.</p></blockquote>
 
-            <p>That essay is now eleven years old. And here's what's wild: <strong>almost nothing has changed.</strong> JavaScript, Python, Rust, C#, Dart, Kotlin — they all still have colored functions. They all still force you to choose sync or async at function definition time, and that choice propagates virally through your entire codebase.</p>
+            <p>This sync/async distinction appears in languages including JavaScript, Python, Rust, C#, and Kotlin. Each language handles the details differently.</p>
 
-            <p>OCaml 5, released in late 2022, took a completely different path. It introduced <strong>algebraic effect handlers</strong> — a mechanism that eliminates function coloring entirely. Not by removing async. Not by hiding it behind threads. By making side effects a <em>value you can intercept and reinterpret</em>, rather than a property baked into the function's type.</p>
+            <p>OCaml takes a different approach. Its handlers make a side effect something the surrounding code interprets rather than a property fixed in the function's type. This post works through that approach from the beginning.</p>
 
-            <p>This matters. And almost nobody outside the PL research community is talking about it.</p>
+            <h2>How Async Propagates</h2>
 
-            <h2>The Infection Pattern</h2>
-
-            <p>Let me show you the problem concretely. Say you have a perfectly reasonable call stack:</p>
+            <p>Here's a toy version of what happened to me. You have a perfectly reasonable call stack:</p>
 
             <div class="code-block">
                 <div class="code-label"><span class="lang-dot" style="background: var(--gold);"></span> JavaScript</div>
@@ -350,8 +332,8 @@
 
             <!-- Interactive: Function Color Infection Visualizer -->
             <div class="color-viz" id="colorViz">
-                <div class="viz-title">⚡ Interactive: The Color Infection</div>
-                <div class="viz-desc">Click "Make db.query async" and watch the infection spread upward through the call stack.</div>
+                <div class="viz-title">Interactive: Async Propagation</div>
+                <div class="viz-desc">Click "Make db.query async" to see which callers also need to change.</div>
 
                 <div class="call-stack" id="callStack">
                     <div class="call-frame neutral" id="frame-4" data-name="renderDashboard">renderDashboard()</div>
@@ -374,33 +356,26 @@
                 </div>
             </div>
 
-            <p>One change at the bottom of the stack forced <strong>every function above it</strong> to change its signature. <code>getMetrics</code> now returns a <code>Promise</code>. So <code>processData</code> needs <code>await</code>, which means it returns a <code>Promise</code>. So <code>renderDashboard</code> needs <code>await</code> too.</p>
+            <p>Step by step: <code>db.query</code> now returns a <code>Promise</code>. <code>getMetrics</code> must await that promise, so <code>getMetrics</code> becomes async and now returns a promise of its own. <code>processData</code> must await <code>getMetrics</code>, which makes <code>processData</code> async. Finally, <code>renderDashboard</code> must await <code>processData</code>. Tests and mocks that call these functions may need to follow the same interface.</p>
 
-            <p>This isn't a JavaScript problem. It's a <strong>structural problem</strong> with how async/await works in every language that adopted it. The function's "color" — whether it's sync or async — is part of its <em>interface</em>, not its <em>implementation</em>. And interfaces propagate.</p>
+            <h4>Practical consequences</h4>
 
-            <h4>Why this actually hurts</h4>
-
-            <p>It's not just annoying refactoring. Colored functions break composition in deep ways:</p>
+            <p>Beyond changing several function declarations, the sync/async distinction affects how code can be combined:</p>
 
             <ul>
-                <li><strong>You can't use async inside <code>Array.map</code></strong> — <code>[1,2,3].map(async x => await fetch(x))</code> gives you <code>Promise[]</code>, not the values. You need <code>Promise.all</code>. Every higher-order function becomes a trap.</li>
-                <li><strong>You can't implement sync interfaces with async code.</strong> If a library expects a comparator <code>(a, b) => number</code>, you can't make it async. Period. Even if the comparison needs network data.</li>
-                <li><strong>Testing becomes harder.</strong> Your test wants to provide a mock synchronously, but the function signature demands a Promise. So your test becomes async too. The infection never stops.</li>
-                <li><strong>Two ecosystems diverge.</strong> Every utility function eventually gets duplicated: <code>map</code> and <code>mapAsync</code>, <code>retry</code> and <code>retryAsync</code>. Two parallel worlds that can't share code.</li>
+                <li><code>[1,2,3].map(async x => await fetch(x))</code> returns <code>Promise[]</code>, not the resolved values, so it needs an additional <code>Promise.all</code>.</li>
+                <li>If a library expects a sync comparator <code>(a, b) => number</code>, you cannot implement it with async code. There's no workaround. I've hit this one in real life and the answer was "restructure everything."</li>
+                <li>The same change reaches tests. A synchronous mock may need to adopt the asynchronous interface even when it already has the result available.</li>
             </ul>
 
             <h2>What OCaml 5 Did Instead</h2>
-
-            <p>OCaml 5 introduced <strong>effect handlers</strong> — based on decades of PL research on algebraic effects (Plotkin & Pretnar, 2009). The core insight is deceptively simple:</p>
 
             <div class="callout-box">
                 <div class="callout-title">The Key Idea</div>
                 <p>Instead of baking side effects into a function's type, let the function <strong>declare what it needs</strong> (an effect) and let the <strong>caller decide how to provide it</strong> (a handler). The function doesn't know or care whether the effect is satisfied synchronously, asynchronously, or not at all.</p>
             </div>
 
-            <p>Think of it like this. In async/await, a function that does I/O is permanently branded: "I am async." In OCaml 5, a function that does I/O just says: "I need some data" — and someone else decides how to get it.</p>
-
-            <p>Here's what the syntax looks like:</p>
+            <p>Here is a small example:</p>
 
             <div class="code-block">
                 <div class="code-label"><span class="lang-dot" style="background: var(--orange);"></span> OCaml 5</div>
@@ -419,9 +394,7 @@
   <span class="fn">format_chart</span> data</pre>
             </div>
 
-            <p>Notice anything? <strong>No async. No await. No Promise.</strong> <code>get_metrics</code> looks like a regular function. <code>render_dashboard</code> looks like a regular function. That's because they <em>are</em> regular functions.</p>
-
-            <p>The magic is in the handler — the thing that decides what <code>Fetch</code> actually does:</p>
+            <p>No async, no await, no Promise. <code>get_metrics</code> looks like a regular function because it <em>is</em> one. The interesting part is the handler — the thing that decides what <code>Fetch</code> actually does:</p>
 
             <div class="code-block">
                 <div class="code-label"><span class="lang-dot" style="background: var(--orange);"></span> OCaml 5 — The Handler</div>
@@ -440,11 +413,11 @@
 <span class="kw">let</span> () = <span class="fn">run_with_http</span> render_dashboard</pre>
             </div>
 
-            <p>The handler catches the <code>Fetch</code> effect, does the actual HTTP call, and <strong>resumes</strong> the original function with the result. The function that performed the effect doesn't know any of this happened — it just got back a string.</p>
+            <p>The handler catches the <code>Fetch</code> effect, does the actual HTTP call, and <strong>resumes</strong> the original function with the result. The function that performed the effect never finds out any of this happened — from its point of view, it asked for a string and got a string.</p>
 
             <h2>Step Through It: How Perform and Resume Work</h2>
 
-            <p>This is where most explanations lose people. So let's trace it step by step.</p>
+            <p>Here is the control flow step by step:</p>
 
             <!-- Interactive: Effect Handler Step-Through Simulator -->
             <div class="effect-sim" id="effectSim">
@@ -476,40 +449,13 @@
                 </div>
             </div>
 
-            <p>The critical thing to notice: <strong>the function's control flow is linear.</strong> It hits <code>perform</code>, gets suspended, the handler runs, and then the function <em>resumes exactly where it left off</em> with the value the handler provided. No callbacks. No <code>.then()</code>. No color change.</p>
+            <p>The thing to notice: <strong>the function's control flow stays linear.</strong> It hits <code>perform</code>, suspends, the handler runs, and then it <em>resumes exactly where it left off</em> with the value the handler provided. No callbacks, no <code>.then()</code>, no color change.</p>
 
-            <p>This is essentially a resumable exception. <code>perform</code> throws an effect upward. The handler catches it, does some work, and then — unlike exceptions — <em>gives a value back</em> and lets the original code continue.</p>
-
-            <h2>The Superpower: Swappable Handlers</h2>
-
-            <p>Here's where it gets genuinely powerful — and where my original take comes in.</p>
-
-            <p>Because the handler is <em>separate</em> from the function, you can swap handlers without touching a single line of your business logic. Same function, different interpretation:</p>
-
-            <div class="code-block">
-                <div class="code-label"><span class="lang-dot" style="background: var(--orange);"></span> Same function, three handlers</div>
-<pre><span class="cmt">(* Production: real HTTP *)</span>
-<span class="fn">run_with_http</span> render_dashboard
-
-<span class="cmt">(* Testing: deterministic mock *)</span>
-<span class="fn">run_with_mock</span> [<span class="str">"url1"</span>, <span class="str">"fake_data"</span>] render_dashboard
-
-<span class="cmt">(* Debugging: log every fetch, then do it *)</span>
-<span class="fn">run_with_logging</span> render_dashboard
-
-<span class="cmt">(* Batching: collect all fetches, do them in parallel *)</span>
-<span class="fn">run_with_batch</span> render_dashboard</pre>
-            </div>
-
-            <p>That last one is wild. A batching handler can intercept every <code>Fetch</code> effect, collect them all, fire them in parallel, and resume each function with its result. The function code doesn't change. It doesn't even know it's being batched. You get automatic request deduplication and parallelism <em>for free</em>.</p>
-
-            <p>This is what dependency injection <em>should</em> have been. Not a framework. Not annotations. Not a DI container. Just: "I need X" / "Here's how X works."</p>
+            <p>The mental model that finally stuck for me: it's a resumable exception. <code>perform</code> throws an effect upward, a handler catches it — but unlike an exception, the handler can hand a value back and let the original code keep going as if nothing happened.</p>
 
             <h2>The Deeper Insight: Effects Are a Composition Primitive</h2>
 
-            <p>Most discussions of effect handlers stop at "it's better async." I think that misses the real point.</p>
-
-            <p><strong>Effects are a universal composition primitive.</strong> They're not just for async — they can express exceptions, state, nondeterminism, logging, and concurrency. All with the same mechanism.</p>
+            <p>The same mechanism can express exceptions, state, nondeterminism, logging, and concurrency:</p>
 
             <div class="code-block">
                 <div class="code-label"><span class="lang-dot" style="background: var(--orange);"></span> Effects beyond async</div>
@@ -529,90 +475,13 @@
     <span class="fn">perform</span> (<span class="typ">Set</span> (x * 2))</pre>
             </div>
 
-            <p>A handler for <code>Choose</code> could explore both branches and collect all possible final states. That's a backtracking search engine in three lines. Or it could flip a coin. Or ask the user. The function doesn't care.</p>
-
-            <p>Here's the comparison that crystallizes it:</p>
-
-            <table class="compare-table">
-                <tr>
-                    <th>Property</th>
-                    <th>Async/Await</th>
-                    <th>Effect Handlers</th>
-                </tr>
-                <tr>
-                    <td>Function coloring</td>
-                    <td><span class="cross">✗</span> Yes — sync vs async</td>
-                    <td><span class="check">✓</span> No — all functions are the same</td>
-                </tr>
-                <tr>
-                    <td>Works with higher-order functions</td>
-                    <td><span class="cross">✗</span> map, filter etc. break</td>
-                    <td><span class="check">✓</span> Transparent — just works</td>
-                </tr>
-                <tr>
-                    <td>Testability</td>
-                    <td><span class="cross">✗</span> Tests must be async too</td>
-                    <td><span class="check">✓</span> Swap in a sync mock handler</td>
-                </tr>
-                <tr>
-                    <td>Batching / parallelism</td>
-                    <td><span class="cross">✗</span> Manual Promise.all</td>
-                    <td><span class="check">✓</span> Handler can batch automatically</td>
-                </tr>
-                <tr>
-                    <td>Beyond I/O</td>
-                    <td><span class="cross">✗</span> Only for async</td>
-                    <td><span class="check">✓</span> State, nondeterminism, logging, etc.</td>
-                </tr>
-                <tr>
-                    <td>Composability</td>
-                    <td><span class="cross">✗</span> Two parallel ecosystems</td>
-                    <td><span class="check">✓</span> Handlers compose and nest</td>
-                </tr>
-            </table>
-
-            <h2>Why This Should Matter to You (Even If You'll Never Write OCaml)</h2>
-
-            <p>I'm not writing this to convert you to OCaml. I'm writing it because <strong>effect handlers represent a different way of thinking about program structure</strong>, and that way of thinking is leaking into other languages whether they adopt the syntax or not.</p>
-
-            <p>React's hooks? They're effects in disguise. <code>useState</code>, <code>useEffect</code>, <code>useContext</code> — these are all "perform an effect, let the framework handle it." React is the handler. Your component is the function. Dan Abramov <a href="https://overreacted.io/algebraic-effects-for-the-rest-of-us/" target="_blank">has written about this explicitly</a>.</p>
-
-            <p>Python's context managers? Partial effects. <code>with open(file) as f</code> is really "perform a resource acquisition effect, clean up when done."</p>
-
-            <p>Dependency injection frameworks? Trying to solve the same problem effects solve natively — "I need X, someone else provides X" — but with runtime reflection, annotations, and configuration files instead of a language primitive.</p>
-
-            <p>The pattern is everywhere. We're building ad-hoc, half-broken versions of effect handlers in every language because the underlying abstraction is so obviously right. OCaml just gave it a proper name and a sound implementation.</p>
-
-            <h2>The Honest Limitations</h2>
-
-            <p>I should be fair. Effect handlers aren't all roses:</p>
-
-            <ul>
-                <li><strong>Tooling and ecosystem.</strong> OCaml's ecosystem is small. You won't find a package for everything. Jane Street's <code>Base</code> and <code>Core</code> libraries are excellent, but it's not npm.</li>
-                <li><strong>Learning curve.</strong> Continuations are hard to reason about. The type signatures for handlers are genuinely gnarly. <code>(a, _) Effect.Deep.continuation</code> is not something you glance at and understand.</li>
-                <li><strong>Performance overhead.</strong> Capturing and resuming continuations has a cost. It's been heavily optimized in OCaml 5 (using fiber-based continuations), but it's not zero.</li>
-                <li><strong>Type-level tracking.</strong> OCaml 5's effects are <em>untyped</em> — the type system doesn't track which effects a function might perform. Languages like <a href="https://koka-lang.github.io/" target="_blank">Koka</a> and <a href="https://www.unison-lang.org/" target="_blank">Unison</a> do track effects in the types, which is arguably more principled.</li>
-            </ul>
-
-            <p>That last point is important. OCaml took a pragmatic approach: get effect handlers into the language now, even without full type-level effect tracking. The bet is that practical benefits outweigh theoretical purity. It's a very OCaml thing to do.</p>
-
-            <h2>Where This Is Going</h2>
-
-            <p>Effect handlers are on a slow collision course with mainstream languages. <a href="https://without.boats/blog/the-registers-of-rust/" target="_blank">Rust is debating</a> how to make async less viral. WebAssembly is getting <a href="https://github.com/WebAssembly/stack-switching" target="_blank">stack switching</a>, which enables effect-handler-like patterns. Even Java's Project Loom (virtual threads) is an admission that colored functions were a mistake — it solves the problem by making everything "async" under the hood so you never have to write the word.</p>
-
-            <p>OCaml just got there first, with the most general solution. It's the difference between patching symptoms and fixing the root cause.</p>
-
-            <hr>
-
-            <p>The next time you're writing <code>async</code> in front of a function for the fourteenth time in a single refactor, just because one leaf function at the bottom of the call stack now talks to a database — remember that there's a language where that doesn't happen. Where a function that says "I need data" never has to know how the data arrives. Where the caller, not the callee, decides the execution strategy.</p>
-
-            <p>That's what OCaml 5 got right. Not better async. <strong>No async at all.</strong></p>
+            <p>A handler for <code>Choose</code> could explore both branches and collect every possible final state — a backtracking search in a few lines. Or flip a coin. Or ask the user. The function does not need to change.</p>
 
         </div>
     </div>
 
     <footer class="custom-footer">
-        <div class="footer-text">© 2026 Aastha Jain · built with curiosity and too much matcha ✦</div>
+        <div class="footer-text">© 2026 Aastha Jain</div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" crossorigin="anonymous"></script>

@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>threads | Aastha Jain</title>
+    <meta name="author" content="Aastha Jain">
+    <meta name="description" content="Life threads - books, bouldering, NYC adventures, and daily puzzles.">
+    <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdbootstrap@4.20.0/css/mdb.min.css"
+        integrity="sha256-jpjYvU3G3N6nrrBwXJoVEYI/0zw8htfFnhT9ljN3JJw=" crossorigin="anonymous">
+    <link rel="stylesheet" href="/assets/css/academicons.min.css">
+    <link rel="stylesheet" type="text/css"
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap">
+    <link rel="stylesheet" href="/assets/css/jekyll-pygments-themes-github.css" media="" id="highlight_theme_light">
+    <link rel="shortcut icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧵</text></svg>">
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/jekyll-pygments-themes-native.css" media="none" id="highlight_theme_dark">
+    <!-- Leaflet CSS for map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+    <script src="/assets/js/theme.js"></script>
+    <script src="/assets/js/dark_mode.js"></script>
+    <style>
+        /* Threads page custom styles */
+        .threads-page {
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .threads-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .threads-header h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 3rem;
+            font-weight: 400;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.5rem;
+        }
+
+        .threads-header .tagline {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--global-text-color-light);
+            letter-spacing: 0.05em;
+        }
+
+        /* Section styling */
+        .thread-section {
+            margin-bottom: 4rem;
+            position: relative;
+        }
+
+        .thread-section::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 3px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--global-theme-color) 0%, transparent 100%);
+            border-radius: 2px;
+        }
+
+        .thread-section-inner {
+            padding-left: 1.5rem;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: baseline;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .section-icon {
+            font-size: 1.5rem;
+        }
+
+        .section-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .section-subtitle {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--global-text-color-light);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        /* Books section */
+        .book-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .book-item {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 1rem;
+            align-items: start;
+            padding: 1rem;
+            background: var(--global-card-bg-color);
+            border: 1px solid var(--global-divider-color);
+            border-radius: 6px;
+        }
+
+        .book-status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-top: 0.5rem;
+        }
+
+        .book-status-dot.reading {
+            background: var(--global-theme-color);
+            box-shadow: 0 0 8px var(--global-theme-color);
+        }
+
+        .book-status-dot.finished {
+            background: #42b983;
+        }
+
+        .book-info h3 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0 0 0.25rem 0;
+        }
+
+        .book-author {
+            font-size: 0.85rem;
+            color: var(--global-text-color-light);
+            margin-bottom: 0.5rem;
+        }
+
+        .book-note {
+            font-size: 0.9rem;
+            font-style: italic;
+            color: var(--global-text-color);
+        }
+
+        .book-date {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--global-text-color-light);
+            white-space: nowrap;
+        }
+
+        /* Bouldering section */
+        .ascent-tracker {
+            background: var(--global-card-bg-color);
+            border: 1px solid var(--global-divider-color);
+            border-radius: 12px;
+            padding: 2rem;
+        }
+
+        .grade-progress {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .grade-pill {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            border: 2px solid var(--global-divider-color);
+            color: var(--global-text-color-light);
+            transition: all 0.2s ease;
+        }
+
+        .grade-pill.conquered {
+            background: linear-gradient(135deg, var(--global-theme-color), #e91e8c);
+            border-color: var(--global-theme-color);
+            color: white;
+        }
+
+        .grade-pill.current {
+            border-color: var(--global-theme-color);
+            color: var(--global-theme-color);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .ascent-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-box {
+            text-align: center;
+            padding: 1rem;
+            background: var(--global-bg-color);
+            border-radius: 8px;
+        }
+
+        .stat-number {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--global-theme-color);
+        }
+
+        .stat-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--global-text-color-light);
+        }
+
+        .ascent-note {
+            font-size: 0.9rem;
+            color: var(--global-text-color-light);
+            margin-bottom: 1.5rem;
+        }
+
+        /* Media gallery for bouldering */
+        .climb-media {
+            margin-top: 1.5rem;
+            border-top: 1px solid var(--global-divider-color);
+            padding-top: 1.5rem;
+        }
+
+        .climb-media h4 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--global-text-color-light);
+            margin-bottom: 1rem;
+        }
+
+        .media-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .media-item {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: 8px;
+            overflow: hidden;
+            background: var(--global-bg-color);
+        }
+
+        .media-item img,
+        .media-item video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .media-item .media-label {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 0.5rem;
+            background: linear-gradient(transparent, rgba(0,0,0,0.7));
+            color: white;
+            font-size: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .media-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            aspect-ratio: 1;
+            border: 2px dashed var(--global-divider-color);
+            border-radius: 8px;
+            color: var(--global-text-color-light);
+            font-size: 0.8rem;
+            text-align: center;
+            padding: 1rem;
+        }
+
+        .media-placeholder span {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Places section with map */
+        .places-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .places-container {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        #places-map {
+            height: 400px;
+            border-radius: 12px;
+            border: 1px solid var(--global-divider-color);
+            z-index: 1;
+        }
+
+        .map-legend {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 0.75rem;
+            font-size: 0.8rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .legend-dot.cafe { background: #8b5a2b; }
+        .legend-dot.food { background: #e91e8c; }
+        .legend-dot.park { background: #22c55e; }
+        .legend-dot.culture { background: #a855f7; }
+        .legend-dot.bar { background: #f59e0b; }
+        .legend-dot.shop { background: #3b82f6; }
+        .legend-dot.view { background: #06b6d4; }
+
+        .places-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            max-height: 450px;
+            overflow-y: auto;
+        }
+
+        .place-item {
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-start;
+            padding: 0.75rem;
+            background: var(--global-card-bg-color);
+            border: 1px solid var(--global-divider-color);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .place-item:hover {
+            border-color: var(--global-theme-color);
+        }
+
+        .place-rating {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-top: 0.4rem;
+        }
+
+        .place-rating.cafe { background: #8b5a2b; }
+        .place-rating.food { background: #e91e8c; }
+        .place-rating.park { background: #22c55e; }
+        .place-rating.culture { background: #a855f7; }
+        .place-rating.bar { background: #f59e0b; }
+        .place-rating.shop { background: #3b82f6; }
+        .place-rating.view { background: #06b6d4; }
+
+        .place-info h4 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1rem;
+            font-weight: 600;
+            margin: 0 0 0.15rem 0;
+        }
+
+        .place-neighborhood {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--global-text-color-light);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .place-note {
+            font-size: 0.85rem;
+            color: var(--global-text-color-light);
+            margin-top: 0.25rem;
+        }
+
+        /* Puzzles section */
+        .puzzles-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .streak-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, var(--global-theme-color), #e91e8c);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+        }
+
+        .puzzle-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .puzzle-item {
+            background: var(--global-card-bg-color);
+            border: 1px solid var(--global-divider-color);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .puzzle-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .puzzle-header:hover {
+            background: var(--global-bg-color);
+        }
+
+        .puzzle-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .puzzle-meta {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .puzzle-date {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--global-text-color-light);
+        }
+
+        .puzzle-difficulty {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .puzzle-difficulty.easy {
+            background: rgba(66, 185, 131, 0.15);
+            color: #42b983;
+        }
+
+        .puzzle-difficulty.medium {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+        }
+
+        .puzzle-difficulty.hard {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+
+        .puzzle-toggle {
+            font-size: 1.2rem;
+            color: var(--global-text-color-light);
+            transition: transform 0.2s;
+        }
+
+        .puzzle-item.expanded .puzzle-toggle {
+            transform: rotate(180deg);
+        }
+
+        .puzzle-solution {
+            display: none;
+            padding: 1rem;
+            border-top: 1px solid var(--global-divider-color);
+            background: var(--global-bg-color);
+        }
+
+        .puzzle-item.expanded .puzzle-solution {
+            display: block;
+        }
+
+        .puzzle-solution h5 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--global-text-color-light);
+            margin-bottom: 0.75rem;
+        }
+
+        .puzzle-solution p {
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .puzzle-solution pre {
+            background: var(--global-code-bg-color);
+            padding: 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 576px) {
+            .threads-header h1 {
+                font-size: 2.2rem;
+            }
+            
+            .thread-section::before {
+                display: none;
+            }
+            
+            .thread-section-inner {
+                padding-left: 0;
+            }
+
+            .book-item {
+                grid-template-columns: auto 1fr;
+            }
+
+            .book-date {
+                grid-column: 2;
+                margin-top: 0.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body class="fixed-top-nav">
+    <header>
+        <nav id="navbar" class="navbar navbar-light navbar-expand-sm fixed-top">
+            <div class="container">
+                <a class="navbar-brand title font-weight-lighter" href="/">
+                    <span class="font-weight-bold">Aastha </span>Jain
+                </a>
+                <button class="navbar-toggler collapsed ml-auto" type="button" data-toggle="collapse"
+                    data-target="#navbarNav">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar top-bar"></span>
+                    <span class="icon-bar middle-bar"></span>
+                    <span class="icon-bar bottom-bar"></span>
+                </button>
+                <div class="collapse navbar-collapse text-right" id="navbarNav">
+                    <ul class="navbar-nav ml-auto flex-nowrap">
+                        <li class="nav-item"><a class="nav-link" href="/">about</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/blog/">blog</a></li>
+                        <li class="nav-item active"><a class="nav-link" href="/threads/">threads<span class="sr-only">(current)</span></a></li>
+                        <li class="nav-item"><a class="nav-link" href="/projects/">projects</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/publications/">publications</a></li>
+                        <li class="toggle-container">
+                            <button id="light-toggle" title="Change theme">
+                                <i class="fa-solid fa-moon"></i>
+                                <i class="fa-solid fa-sun"></i>
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        <progress id="progress" value="0">
+            <div class="progress-container"><span class="progress-bar"></span></div>
+        </progress>
+    </header>
+
+    <div class="container mt-5 threads-page">
+        <!-- Page Header -->
+        <div class="threads-header">
+            <h1>threads</h1>
+            <p class="tagline">sharing some things for accountability, others just for fun</p>
+        </div>
+
+        <!-- Books Section -->
+        <section class="thread-section">
+            <div class="thread-section-inner">
+                <div class="section-header">
+                    <span class="section-icon">📚</span>
+                    <h2 class="section-title">Reading</h2>
+                </div>
+
+                <div class="book-list">
+                    <div class="book-item">
+                        <div class="book-status-dot reading"></div>
+                        <div class="book-info">
+                            <h3>The Art of Doing Science and Engineering</h3>
+                            <p class="book-author">Richard Hamming</p>
+                            <p class="book-note">"The purpose is insight, not numbers."</p>
+                        </div>
+                        <span class="book-date">Jan 2026</span>
+                    </div>
+
+                    <div class="book-item">
+                        <div class="book-status-dot finished"></div>
+                        <div class="book-info">
+                            <h3>Atomic Habits</h3>
+                            <p class="book-author">James Clear</p>
+                            <p class="book-note">Systems beat goals. Small changes compound.</p>
+                        </div>
+                        <span class="book-date">Dec 2025</span>
+                    </div>
+
+                    <!-- Add more books here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Bouldering Section -->
+        <section class="thread-section">
+            <div class="thread-section-inner">
+                <div class="section-header">
+                    <span class="section-icon">🧗</span>
+                    <h2 class="section-title">The Ascent</h2>
+                    <span class="section-subtitle">bouldering</span>
+                </div>
+
+                <div class="ascent-tracker">
+                    <div class="grade-progress">
+                        <span class="grade-pill conquered">V0</span>
+                        <span class="grade-pill conquered">V1</span>
+                        <span class="grade-pill current">V2</span>
+                        <span class="grade-pill">V3</span>
+                        <span class="grade-pill">V4</span>
+                        <span class="grade-pill">V5</span>
+                        <span class="grade-pill">V6</span>
+                    </div>
+
+                    <div class="ascent-stats">
+                        <div class="stat-box">
+                            <div class="stat-number">12</div>
+                            <div class="stat-label">Sessions</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-number">V2</div>
+                            <div class="stat-label">Highest</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-number">Jan '26</div>
+                            <div class="stat-label">Started</div>
+                        </div>
+                    </div>
+
+                    <p class="ascent-note">
+                        Currently climbing at <strong>Brooklyn Boulders</strong>
+                    </p>
+
+                    <!-- Media gallery -->
+                    <div class="climb-media">
+                        <h4>Sends & Progress</h4>
+                        <div class="media-grid">
+                            <!-- Add your photos/videos here -->
+                            <!-- Example: 
+                            <div class="media-item">
+                                <img src="/assets/img/climb1.jpg" alt="V2 send">
+                                <span class="media-label">First V2!</span>
+                            </div>
+                            <div class="media-item">
+                                <video src="/assets/video/climb.mp4" controls></video>
+                                <span class="media-label">Working on V3</span>
+                            </div>
+                            -->
+                            <div class="media-placeholder">
+                                <span>📷</span>
+                                Add photos & videos
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Places Section -->
+        <section class="thread-section">
+            <div class="thread-section-inner">
+                <div class="section-header">
+                    <span class="section-icon">📍</span>
+                    <h2 class="section-title">Places I Love</h2>
+                    <span class="section-subtitle">NYC</span>
+                </div>
+
+                <div class="places-container">
+                    <div>
+                        <div id="places-map"></div>
+                        <div class="map-legend">
+                            <div class="legend-item">
+                                <div class="legend-dot cafe"></div>
+                                <span>Cafe</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-dot food"></div>
+                                <span>Food</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-dot park"></div>
+                                <span>Park</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-dot culture"></div>
+                                <span>Culture</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-dot bar"></div>
+                                <span>Bar</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-dot shop"></div>
+                                <span>Shop</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-dot view"></div>
+                                <span>View</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="places-list">
+                        <div class="place-item" data-lat="40.7339" data-lng="-74.0026" data-rating="cafe">
+                            <div class="place-rating cafe"></div>
+                            <div class="place-info">
+                                <h4>Stumptown Coffee</h4>
+                                <p class="place-neighborhood">West Village</p>
+                                <p class="place-note">Perfect pour-over, great window seats</p>
+                            </div>
+                        </div>
+
+                        <div class="place-item" data-lat="40.7794" data-lng="-73.9692" data-rating="park">
+                            <div class="place-rating park"></div>
+                            <div class="place-info">
+                                <h4>The Ramble</h4>
+                                <p class="place-neighborhood">Central Park</p>
+                                <p class="place-note">A forest in Manhattan. My thinking spot.</p>
+                            </div>
+                        </div>
+
+                        <div class="place-item" data-lat="40.7331" data-lng="-73.9909" data-rating="shop">
+                            <div class="place-rating shop"></div>
+                            <div class="place-info">
+                                <h4>Strand Bookstore</h4>
+                                <p class="place-neighborhood">East Village</p>
+                                <p class="place-note">18 miles of books</p>
+                            </div>
+                        </div>
+
+                        <div class="place-item" data-lat="40.7484" data-lng="-73.9857" data-rating="view">
+                            <div class="place-rating view"></div>
+                            <div class="place-info">
+                                <h4>Empire State Building</h4>
+                                <p class="place-neighborhood">Midtown</p>
+                                <p class="place-note">Classic NYC skyline view</p>
+                            </div>
+                        </div>
+
+                        <!-- Add more places with: data-lat, data-lng, data-rating (cafe/food/park/culture/bar/shop/view) -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Puzzles Section -->
+        <section class="thread-section">
+            <div class="thread-section-inner">
+                <div class="section-header">
+                    <span class="section-icon">🧩</span>
+                    <h2 class="section-title">Math Puzzles</h2>
+                </div>
+
+                <div class="puzzles-header">
+                    <a href="#" class="puzzle-link" style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--global-theme-color);">
+                        → puzzle source
+                    </a>
+                    <div class="streak-badge">
+                        🔥 0 day streak
+                    </div>
+                </div>
+
+                <div class="puzzle-list">
+                    <p style="color: var(--global-text-color-light); font-style: italic;">No puzzles yet — starting soon!</p>
+                    
+                    <!-- Add puzzles like this:
+                    <div class="puzzle-item">
+                        <div class="puzzle-header" onclick="this.parentElement.classList.toggle('expanded')">
+                            <div>
+                                <div class="puzzle-title">Puzzle Title</div>
+                                <div class="puzzle-meta">
+                                    <span class="puzzle-date">Jan 19, 2026</span>
+                                    <span class="puzzle-difficulty medium">Medium</span>
+                                </div>
+                            </div>
+                            <span class="puzzle-toggle">▼</span>
+                        </div>
+                        <div class="puzzle-solution">
+                            <h5>Problem</h5>
+                            <p>Problem description...</p>
+                            <h5>Solution</h5>
+                            <p>Your solution...</p>
+                        </div>
+                    </div>
+                    -->
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <footer class="fixed-bottom">
+        <div class="container mt-0">
+            © Copyright 2024 Aastha Jain. Powered by <a href="https://jekyllrb.com/" target="_blank">Jekyll</a>,
+            theme by <a href="https://github.com/alshedivat/al-folio" target="_blank">al-folio</a>,
+            hosted on <a href="https://pages.github.com/" target="_blank">GitHub Pages</a>.
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" crossorigin="anonymous"></script>
+    <script src="/assets/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mdbootstrap@4.20.0/js/mdb.min.js" crossorigin="anonymous"></script>
+    <script src="/assets/js/theme.js"></script>
+    
+    <!-- Leaflet JS for map -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script>
+        // Initialize map
+        const map = L.map('places-map').setView([40.7580, -73.9855], 12);
+        
+        // Add tile layer (dark/light based on theme)
+        const lightTiles = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+        const darkTiles = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+        
+        let tileLayer = L.tileLayer(
+            document.documentElement.getAttribute('data-theme') === 'dark' ? darkTiles : lightTiles,
+            { attribution: '© OpenStreetMap, © CARTO' }
+        ).addTo(map);
+
+        // Watch for theme changes
+        const observer = new MutationObserver(() => {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            tileLayer.setUrl(isDark ? darkTiles : lightTiles);
+        });
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+        // Color markers by category
+        const markerColors = {
+            cafe: '#8b5a2b',
+            food: '#e91e8c',
+            park: '#22c55e',
+            culture: '#a855f7',
+            bar: '#f59e0b',
+            shop: '#3b82f6',
+            view: '#06b6d4'
+        };
+
+        function createMarker(lat, lng, rating, name) {
+            const color = markerColors[rating] || markerColors.nice;
+            const marker = L.circleMarker([lat, lng], {
+                radius: 8,
+                fillColor: color,
+                color: '#fff',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.9
+            }).addTo(map);
+            marker.bindPopup(`<strong>${name}</strong>`);
+            return marker;
+        }
+
+        // Add markers from place items
+        const markers = {};
+        document.querySelectorAll('.place-item').forEach((item, index) => {
+            const lat = parseFloat(item.dataset.lat);
+            const lng = parseFloat(item.dataset.lng);
+            const rating = item.dataset.rating;
+            const name = item.querySelector('h4').textContent;
+            
+            if (lat && lng) {
+                markers[index] = createMarker(lat, lng, rating, name);
+                
+                // Click to zoom
+                item.addEventListener('click', () => {
+                    map.setView([lat, lng], 15);
+                    markers[index].openPopup();
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>
