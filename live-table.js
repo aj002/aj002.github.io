@@ -8,7 +8,7 @@
   const storageKey = 'aastha-poker-session-v1' + (apiBase === '/api' ? '' : `:${apiBase}`);
   const suit = {s:'♠', h:'♥', d:'♦', c:'♣'};
   const suitName = {s:'spades', h:'hearts', d:'diamonds', c:'clubs'};
-  const seatNames = ['You', 'My bot', 'The Rock', 'The Aggressor'];
+  const seatNames = ['You', 'My bot', 'Pip', 'Dot'];
   const chips = n => Number(n).toLocaleString('en-US');
   let session = null, snapshot = null, busy = false, polling = false;
   let connected = false, arenaOpen = false, decision = null;
