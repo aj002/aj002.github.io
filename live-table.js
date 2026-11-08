@@ -197,7 +197,7 @@
     q('#aj-call').textContent = legal?.check ? 'Check' : legal?.call_amount != null ? `Call ${chips(legal.call_amount)}` : 'Check / call';
     const fullRaise = legal?.can_raise && legal.min_full_raise_to != null && legal.max_raise_to != null && legal.min_full_raise_to <= legal.max_raise_to;
     const input = q('#aj-amount');
-    if (decision !== view.decision_id) {
+    if (legal && decision !== view.decision_id) {
       decision = view.decision_id;
       input.min = String(fullRaise ? legal.min_full_raise_to : legal?.short_all_in_raise_to || 0);
       input.max = String(fullRaise ? legal.max_raise_to : legal?.short_all_in_raise_to || 0);
