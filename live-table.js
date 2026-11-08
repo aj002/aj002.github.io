@@ -8,7 +8,7 @@
   const storageKey = 'aastha-poker-session-v1' + (apiBase === '/api' ? '' : `:${apiBase}`);
   const suit = {s:'♠', h:'♥', d:'♦', c:'♣'};
   const suitName = {s:'spades', h:'hearts', d:'diamonds', c:'clubs'};
-  const seatNames = ['You', 'My bot', 'Pip', 'Dot'];
+  const seatNames = ['You', 'My bot', 'Pip', 'Dot', 'Rue', 'Kit', 'Moss', 'Lux'];
   const chips = n => Number(n).toLocaleString('en-US');
   let session = null, snapshot = null, busy = false, polling = false;
   let connected = false, arenaOpen = false, decision = null;
@@ -17,7 +17,7 @@
   if (!tableOffline) {
     try { session = JSON.parse(sessionStorage.getItem(storageKey) || 'null'); } catch {}
   }
-  if (session?.mode) q('#aj-lineup').value = session.mode;
+  if (session?.mode && [...q('#aj-lineup').options].some(o => o.value === session.mode)) q('#aj-lineup').value = session.mode;
   q('#aj-offline').hidden = !tableOffline;
   for (const selector of ['.aj-game-grid', '.aj-game-footer', '.aj-mode-label', '.aj-arena-header p']) {
     q(selector).hidden = tableOffline;
@@ -118,10 +118,11 @@
     if (snapshot && next.version < snapshot.version) return;
     // Keep the completed hand on the felt until the visitor chooses to continue.
     // The server may already be waiting at the next hand's first human decision.
-    if (next.last_hand && next.last_hand.hand_id !== lastCompleted && snapshot?.view?.hand_id === next.last_hand.hand_id) {
+    if (next.view?.players.find(p => p.seat === next.view.hero_seat)?.status !== 'eliminated' && next.last_hand && next.last_hand.hand_id !== lastCompleted && snapshot?.view?.hand_id === next.last_hand.hand_id) {
       heldHand = next.last_hand;
     }
     if (next.last_hand) lastCompleted = next.last_hand.hand_id;
+    if (next.view?.players.find(p => p.seat === next.view.hero_seat)?.status === 'eliminated' || next.status === 'complete') heldHand = null;
     snapshot = next;
     connected = true;
     connection('Bot connected');
@@ -139,8 +140,10 @@
       q('#aj-amount').disabled = true;
       return;
     }
-    const mixed = session.mode === 'mixed';
-    all('.aj-extra').forEach(el => el.hidden = !mixed);
+    const mixed = session.mode !== 'duel';
+    q('.aj-table-stage').dataset.format = session.mode;
+    all('.aj-extra').forEach(el => el.hidden = !view.players.some(p => p.seat === Number(el.dataset.seat)));
+    q('.aj-format').hidden = session.mode !== 'tournament';
     q('#aj-lineup-description').hidden = !mixed;
 
     const events = heldHand?.events || view.action_history;
@@ -154,6 +157,8 @@
     q('#aj-hero-cards').innerHTML = ownCards.map(c => card(c)).join('');
     q('#aj-street').textContent = heldHand ? 'Hand complete' : snapshot.status === 'complete' ? 'Table complete' : (view.street || 'Dealing');
 
+    const blinds = heldHand?.events.find(e => e.type === 'HandStarted')?.data || view.blinds || snapshot.last_hand?.events.find(e => e.type === 'HandStarted')?.data;
+    q('#aj-live-blinds').textContent = blinds ? `Blinds ${chips(blinds.small_blind)} / ${chips(blinds.big_blind)}` : 'Tournament complete';
     const finalStacks = heldHand?.events.find(e => e.type === 'HandCompleted')?.data.final_stacks;
     for (const el of all('[data-seat]')) {
       const seat = Number(el.dataset.seat);
@@ -176,6 +181,16 @@
       el.querySelector('.aj-dealer')?.remove();
       if (!heldHand && view.button_seat === seat) el.querySelector('.aj-seat-panel').insertAdjacentHTML('beforeend', '<span class="aj-dealer" aria-label="Dealer">D</span>');
     }
+    for (const el of all('[data-reveal-seat]')) {
+      const seat = Number(el.dataset.revealSeat);
+      const shown = heldHand ? heldHand.events.find(e => e.type === 'CardsRevealed' && e.data.seat === seat)?.data.cards : view.players.find(p => p.seat === seat)?.shown_cards;
+      el.innerHTML = shown?.map(c => card(c)).join('') || '';
+    }
+    const points = snapshot.results?.points;
+    q('#aj-standings-title').textContent = points ? 'Tournament points' : 'Chips at the table';
+    const ranked = view.players.map(p => ({seat:p.seat, value:points ? Number(points[p.seat]) : Number(finalStacks?.[p.seat] ?? (p.stack + p.hand_committed))})).sort((a,b) => b.value - a.value || a.seat - b.seat);
+    q('#aj-standings').innerHTML = ranked.map(p => `<li${p.seat < 2 ? ' class=aj-featured-seat' : ''}><span>${escape(who(p.seat))}</span><strong>${points ? p.value.toFixed(1) + ' pts' : chips(p.value)}</strong></li>`).join('');
+    q('#aj-score-note').textContent = points ? (snapshot.results.placements.some(p => p.method === 'icm') ? 'Hand limit reached. Remaining points shared by ICM.' : 'Final points · 50 / 30 / 20 for the top three.') : (view.next_level ? `Next blinds: ${chips(view.next_level.small_blind)} / ${chips(view.next_level.big_blind)} at hand ${view.next_level.starts_at_hand}.` : 'Final blind level.');
     const bot = view.players.find(p => p.seat === 1);
     const shown = heldHand ? heldHand.events.find(e => e.type === 'CardsRevealed' && e.data.seat === 1)?.data.cards : bot?.shown_cards;
     q('#aj-bot-cards').innerHTML = shown?.length ? shown.map(c => card(c)).join('') : card(null,true) + card(null,true);
@@ -187,7 +202,7 @@
     const complete = snapshot.status === 'complete' || hero?.status === 'eliminated';
     const legal = !complete && !heldHand ? view.legal : null;
     const yourTurn = Boolean(legal) && view.actor_seat === view.hero_seat;
-    q('#aj-turn-text').textContent = heldHand ? 'Hand complete' : complete ? (hero?.status === 'eliminated' ? 'You’re out of chips.' : 'Table complete.') : busy || session?.pending ? 'Confirming your move…' : !connected ? 'Reconnecting…' : yourTurn ? (legal.check ? `Your move · check or ${view.current_bet_to ? 'raise' : 'bet'}` : `Your move · ${chips(legal.call_amount)} to call`) : `${who(view.actor_seat)} is thinking…`;
+    q('#aj-turn-text').textContent = heldHand ? 'Hand complete' : complete ? (snapshot.status === 'complete' ? 'Tournament complete.' : 'You’re out. You can watch the rest of the table.') : busy || session?.pending ? 'Confirming your move…' : !connected ? 'Reconnecting…' : yourTurn ? (legal.check ? `Your move · check or ${view.current_bet_to ? 'raise' : 'bet'}` : `Your move · ${chips(legal.call_amount)} to call`) : `${who(view.actor_seat)} is thinking…`;
     q('#aj-hand-description').textContent = complete || heldHand ? '' : yourTurn && snapshot.turn?.remaining_ms != null ? `${Math.ceil(snapshot.turn.remaining_ms / 1000)}s to act` : '';
     q('#aj-actions').hidden = complete || Boolean(heldHand);
     q('#aj-sizing').hidden = complete || Boolean(heldHand) || !legal?.can_raise;
@@ -211,7 +226,7 @@
     q('#aj-size-help').textContent = heldHand || complete ? '' : legal?.can_raise ? `Adds ${chips(Math.max(0, Number(input.value) - (hero?.street_committed || 0)))} chips from your stack.` : (legal?.raise_blocked_reason || '');
     q('#aj-result').hidden = !heldHand && !complete;
     if (heldHand) q('#aj-result').textContent = heldHand.events.filter(e => e.type === 'PotAwarded').map(eventText).filter(Boolean).join(' ');
-    else if (complete) q('#aj-result').textContent = hero?.status === 'eliminated' ? 'Out of chips. There’s always another table.' : `You finished with ${chips(hero?.stack || 0)} chips.`;
+    else if (complete) q('#aj-result').textContent = points ? `You: ${Number(points[view.hero_seat]).toFixed(1)} points · My bot: ${Number(points[1]).toFixed(1)} points.` : 'Out of chips. Stay to watch, or try a new tournament.';
     q('#aj-next').hidden = !heldHand && !complete;
     q('#aj-next').textContent = complete ? 'Play again →' : 'Next hand →';
   }
@@ -250,8 +265,10 @@
       const catalog = await api('/catalog');
       if (!catalog.policies.some(p => p.id === 'final_bot' && p.source === 'strategy')) throw new Error('Your bot is not available on this server.');
       const seats = [{kind:'human'}, {kind:'bot', policy:'final_bot'}];
+      if (mode === 'tournament') seats.push(...['rock','aggressive','super_aggressive','station','weak_tight','switcher'].map(style => ({kind:'bot', policy:`style_${style}`})));
       if (mode === 'mixed') seats.push({kind:'bot', policy:'style_rock'}, {kind:'bot', policy:'style_aggressive'});
-      const made = await api('/tables', {body:{config:{ruleset_id:'practice_nlhe', starting_stack:1000, hand_cap:20, hands_per_level:20, blind_levels:[[5,10]], human_turn_ms:300000}, seats, styles:{mode:'labelled', learning_aids:false}}});
+      const config = mode === 'tournament' ? {ruleset_id:'practice_nlhe', starting_stack:2000, hand_cap:200, hands_per_level:25, blind_levels:[[10,20],[15,30],[25,50],[50,100],[75,150],[100,200],[150,300],[200,400]], payout_points:[50,30,20,0,0,0,0,0], human_turn_ms:300000} : {ruleset_id:'practice_nlhe', starting_stack:1000, hand_cap:20, hands_per_level:20, blind_levels:[[5,10]], human_turn_ms:300000};
+      const made = await api('/tables', {body:{config, seats, styles:{mode:'labelled', learning_aids:false}}});
       const joined = await api(`/tables/${made.table_id}/join`, {body:{seat:0}});
       session = {tableId:made.table_id, token:joined.seat_token, hostToken:made.host_token, mode, started:false, pending:null};
       save();
@@ -321,7 +338,7 @@
     const destination = jump ? q(`[data-area="${jump}"]`) : root;
     destination?.scrollIntoView({block:'start', behavior:'auto'});
     if (arenaOpen) {
-      if (session) poll();
+      if (session && session.mode === q('#aj-lineup').value) poll();
       else newTable();
     }
   }

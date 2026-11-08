@@ -48,3 +48,49 @@
   #aj-live-table .ap-project:only-child { display:block; }
   #aj-live-table .ap-project:only-child .ap-art { height:125px; margin-bottom:12px; }
 }
+
+/* Full tournament ring, clockwise from the visitor's seat. */
+#aj-live-table .aj-table-stage[data-format="tournament"] { height:620px; margin:0 14px; }
+#aj-live-table [data-format="tournament"] .aj-felt { top:13%; bottom:12%; left:9%; right:9%; border-radius:43%; }
+#aj-live-table [data-format="tournament"] .aj-felt-word { display:none; }
+#aj-live-table [data-format="tournament"] .aj-seat { width:108px; }
+#aj-live-table [data-format="tournament"] .aj-seat-avatar { display:none; }
+#aj-live-table [data-format="tournament"] .aj-seat-panel { width:100px; }
+#aj-live-table [data-format="tournament"] [data-seat="0"] { left:50%; top:87%; width:140px; }
+#aj-live-table [data-format="tournament"] [data-seat="1"] { left:18%; top:73%; }
+#aj-live-table [data-format="tournament"] [data-seat="2"] { left:11%; top:45%; }
+#aj-live-table [data-format="tournament"] [data-seat="3"] { left:18%; top:20%; }
+#aj-live-table [data-format="tournament"] [data-seat="4"] { left:50%; top:10%; }
+#aj-live-table [data-format="tournament"] [data-seat="5"] { left:82%; top:20%; }
+#aj-live-table [data-format="tournament"] [data-seat="6"] { left:89%; top:45%; }
+#aj-live-table [data-format="tournament"] [data-seat="7"] { left:82%; top:73%; }
+#aj-live-table [data-format="tournament"] .aj-extra .aj-card { width:24px; height:33px; font-size:12px; padding:3px; }
+#aj-live-table [data-format="tournament"] .aj-extra .aj-suit { font-size:12px; right:3px; bottom:3px; }
+#aj-live-table .aj-format { color:#d9c4d9; font-size:12px; line-height:1.7; margin:16px 0 28px; }
+#aj-live-table .aj-format summary { cursor:pointer; color:#edc4d7; }
+#aj-live-table .aj-format p { margin:12px 0; }
+#aj-live-table .aj-standings { margin:24px 0; }
+#aj-live-table #aj-standings { list-style:none; margin:0; padding:0; font-size:12px; }
+#aj-live-table #aj-standings li { display:flex; justify-content:space-between; gap:12px; padding:7px 0; border-bottom:1px solid #4c374d66; color:#c2adca; }
+#aj-live-table #aj-standings strong { font:11px 'IBM Plex Mono',monospace; font-weight:400; }
+#aj-live-table #aj-standings .aj-featured-seat { color:#f1c4d5; }
+#aj-live-table #aj-score-note { margin-top:12px; }
+@media(max-width:650px) {
+  #aj-live-table .aj-table-stage[data-format="tournament"] { height:600px; margin:0 8px; }
+  #aj-live-table [data-format="tournament"] .aj-seat { width:76px; }
+  #aj-live-table [data-format="tournament"] .aj-seat-panel { width:74px; padding:7px 2px; }
+  #aj-live-table [data-format="tournament"] .aj-seat-panel small { font-size:10px; }
+  #aj-live-table [data-format="tournament"] .aj-seat-status { font-size:9px; }
+  #aj-live-table [data-format="tournament"] [data-seat="0"] .aj-seat-panel { width:100px; }
+  #aj-live-table [data-format="tournament"] .aj-seat-note { font-size:8px; }
+  #aj-live-table [data-format="tournament"] .aj-board { gap:3px; }
+  #aj-live-table [data-format="tournament"] .aj-board .aj-card { width:29px; height:43px; padding:4px; font-size:14px; }
+  #aj-live-table [data-format="tournament"] .aj-board .aj-suit { font-size:15px; right:4px; bottom:5px; }
+  #aj-live-table [data-format="tournament"] [data-seat="2"] { left:13%; }
+  #aj-live-table [data-format="tournament"] [data-seat="6"] { left:87%; }
+  #aj-live-table [data-format="tournament"] .aj-center { gap:10px; }
+  #aj-live-table .aj-table-meta { font-size:10px; padding:17px 12px 0; letter-spacing:0; }
+}
+
+#aj-live-table .aj-format-badge { font:12px 'IBM Plex Mono',monospace; color:#dfbdd9; border:1px solid #755a76; border-radius:24px; padding:10px 15px; display:inline-block; }
+@media(max-width:650px) { #aj-live-table [data-format="tournament"] .aj-center { transform:translateY(30px); } }
