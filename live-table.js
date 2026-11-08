@@ -142,7 +142,6 @@
     const mixed = session.mode === 'mixed';
     all('.aj-extra').forEach(el => el.hidden = !mixed);
     q('#aj-lineup-description').hidden = !mixed;
-    q('#aj-lineup-description').textContent = mixed ? 'Also here: The Rock and The Aggressor.' : '';
 
     const events = heldHand?.events || view.action_history;
     const heldBoard = heldHand?.events.filter(e => e.type === 'BoardDealt').flatMap(e => e.data.cards);

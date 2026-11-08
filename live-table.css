@@ -32,3 +32,19 @@
 #aj-live-table .aj-offline-panel { padding:64px 28px; text-align:center; border-top:1px solid #493448; }
 #aj-live-table .aj-offline-panel h2 { font:32px 'Instrument Serif',serif; margin-bottom:12px; }
 #aj-live-table .aj-offline-panel p { color:#baa8b7; margin-bottom:24px; }
+
+/* A little context without crowding the table. */
+#aj-live-table .aj-seat-note { display:block; color:#e6b6cd; font-size:9px; line-height:1.5; }
+#aj-live-table .aj-bot-kind { color:#d5b7dc; font-size:10px; font-weight:400; line-height:1.6; }
+#aj-live-table strong .aj-bot-kind { margin-left:6px; }
+#aj-live-table #aj-lineup-description .aj-opponent { border:0; padding:0; margin:0 0 14px; }
+#aj-live-table .aj-style-note { color:#baa8bf; font-size:11px; line-height:1.65; margin:0 0 25px; }
+/* Keep the remaining project card balanced after removing Weaverly. */
+#aj-live-table .ap-project:only-child { grid-column:1/-1; display:grid; grid-template-columns:minmax(160px,.85fr) minmax(0,1fr); column-gap:32px; align-content:center; transform:rotate(-.7deg); }
+#aj-live-table .ap-project:only-child .ap-art { grid-column:1; grid-row:1/4; height:165px; margin:0; align-self:center; }
+#aj-live-table .ap-project:only-child h3,#aj-live-table .ap-project:only-child p,#aj-live-table .ap-project:only-child .ap-project-link { grid-column:2; justify-self:start; }
+#aj-live-table .ap-project:only-child p { min-height:0; }
+@media(max-width:650px) {
+  #aj-live-table .ap-project:only-child { display:block; }
+  #aj-live-table .ap-project:only-child .ap-art { height:125px; margin-bottom:12px; }
+}
