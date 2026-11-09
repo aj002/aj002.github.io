@@ -5,9 +5,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>OCaml 5 Effect Handlers | Aastha Jain</title>
+    <title>OCaml effect handlers, with one example | Aastha Jain</title>
     <meta name="author" content="Aastha Jain">
-    <meta name="description" content="Notes on OCaml 5's effect handlers, function coloring, and why the idea is useful beyond OCaml.">
+    <meta name="description" content="Which functions need to change when a query becomes asynchronous?">
     <link rel="stylesheet" href="../assets/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdbootstrap@4.20.0/css/mdb.min.css"
         integrity="sha256-jpjYvU3G3N6nrrBwXJoVEYI/0zw8htfFnhT9ljN3JJw=" crossorigin="anonymous">
@@ -286,154 +286,111 @@
         <div class="post-meta-bar">
             <a href="../blog/">← back to writing</a>
             <span>·</span>
-            <span>February 2026</span>
+            <span>February 2026 · revised November 2026</span>
         </div>
 
-        <h1 class="post-title">OCaml 5, Effect Handlers, and the Slow Death of Colored Functions</h1>
-        <p class="post-subtitle">A gentle introduction to effect handlers, why async changes spread through a call stack, and the alternative OCaml 5 offers.</p>
+        <h1 class="post-title">OCaml effect handlers, with one example</h1>
+        <p class="post-subtitle">Which functions need to change when a query becomes asynchronous?</p>
 
         <div class="post-body">
-
-            <p>This started with a frustrating refactor. I needed one function at the bottom of a Python service to query a database asynchronously. That single change forced every function calling it—and several tests—to adopt an asynchronous interface too.</p>
-
-            <p>If OCaml is unfamiliar: it is a statically typed functional programming language used in areas including compilers, program analysis, and finance. OCaml 5 added support for multicore parallelism along with a feature called <strong>effect handlers</strong>. You do not need to know OCaml syntax to follow the idea.</p>
-
-            <p>In plain language, an effect lets a function pause and ask the surrounding program to do something on its behalf: fetch data, yield to a scheduler, read some state, or choose between alternatives. A <strong>handler</strong> decides what that request means and can then resume the function with a result.</p>
-
-            <p>Somewhere in the middle of that I reread Bob Nystrom's 2015 essay, <a href="https://journal.stuffwithstuff.com/2015/02/01/what-color-is-your-function/" target="_blank">"What Color is Your Function?"</a> If you haven't read it, the core idea:</p>
-
-            <blockquote><p>In languages with async/await, every function secretly has a color — synchronous (blue) or asynchronous (red). Red functions can call blue functions, but blue functions cannot call red functions. And once a function turns red, everything that calls it must turn red too.</p></blockquote>
-
-            <p>This sync/async distinction appears in languages including JavaScript, Python, Rust, C#, and Kotlin. Each language handles the details differently.</p>
-
-            <p>OCaml takes a different approach. Its handlers make a side effect something the surrounding code interprets rather than a property fixed in the function's type. This post works through that approach from the beginning.</p>
-
-            <h2>How Async Propagates</h2>
-
-            <p>Here's a toy version of what happened to me. You have a perfectly reasonable call stack:</p>
-
-            <div class="code-block">
-                <div class="code-label"><span class="lang-dot" style="background: var(--gold);"></span> JavaScript</div>
-<pre><span class="kw">function</span> <span class="fn">renderDashboard</span>() {
-  <span class="kw">const</span> data = <span class="fn">processData</span>(<span class="fn">getMetrics</span>());
-  <span class="kw">return</span> <span class="fn">formatChart</span>(data);
+            <p>A database query starts returning a promise. Which functions have to change? It depends on where the result is used. A function that only passes the promise on may need no edit at all.</p>
+            <p>This is a small example of the problem discussed in Bob Nystrom’s <a href="https://journal.stuffwithstuff.com/2015/02/01/what-color-is-your-function/">What Color is Your Function?</a> OCaml’s effect handlers offer another way to suspend a computation while keeping its callers in ordinary function-call style.</p>
+            <h2>Start with JavaScript</h2>
+            <p>Assume the query initially returns an array:</p>
+<div class="code-block"><div class="code-label">Before: synchronous query</div><pre>function renderDashboard() {
+  const data = processData(getMetrics());
+  return formatChart(data);
 }
 
-<span class="kw">function</span> <span class="fn">processData</span>(raw) {
-  <span class="kw">return</span> raw.<span class="fn">filter</span>(valid).<span class="fn">map</span>(normalize);
+function processData(raw) {
+  return raw.filter(valid).map(normalize);
 }
 
-<span class="kw">function</span> <span class="fn">getMetrics</span>() {
-  <span class="kw">return</span> db.<span class="fn">query</span>(<span class="str">"SELECT * FROM metrics"</span>);
-}</pre>
-            </div>
+function getMetrics() {
+  return db.query(&quot;SELECT * FROM metrics&quot;);
+}</pre></div>
+            <p>Once <code>db.query</code> returns a promise, <code>getMetrics</code> can forward it unchanged. <code>renderDashboard</code> needs the array before it can process it, so this version adds an <code>await</code> there:</p>
+<div class="code-block"><div class="code-label">After: query returns a promise</div><pre>async function renderDashboard() {
+  const raw = await getMetrics();
+  return formatChart(processData(raw));
+}
 
-            <p>Now someone tells you <code>db.query</code> needs to be async. Here's what happens:</p>
+function getMetrics() {
+  return db.query(&quot;SELECT * FROM metrics&quot;);
+}
 
-            <!-- Interactive: Function Color Infection Visualizer -->
+// processData is unchanged.</pre></div>            <!-- Interactive: Function Color Infection Visualizer -->
             <div class="color-viz" id="colorViz">
-                <div class="viz-title">Interactive: Async Propagation</div>
-                <div class="viz-desc">Click "Make db.query async" to see which callers also need to change.</div>
+                <div class="viz-title">What changes at each call?</div>
+                <div class="viz-desc">Watch the query result pass through getMetrics to renderDashboard.</div>
 
                 <div class="call-stack" id="callStack">
                     <div class="call-frame neutral" id="frame-4" data-name="renderDashboard">renderDashboard()</div>
-                    <div class="call-arrow">↓ calls</div>
-                    <div class="call-frame neutral" id="frame-3" data-name="processData">processData()</div>
                     <div class="call-arrow">↓ calls</div>
                     <div class="call-frame neutral" id="frame-2" data-name="getMetrics">getMetrics()</div>
                     <div class="call-arrow">↓ calls</div>
                     <div class="call-frame neutral" id="frame-1" data-name="db.query">db.query()</div>
                 </div>
 
+                <p><code>processData(raw)</code> stays synchronous: it receives the resolved array.</p>
                 <div class="color-controls">
                     <button class="color-btn" id="infectBtn" onclick="infectStack()">Make db.query async →</button>
                     <button class="color-btn" id="resetColorBtn" onclick="resetColorViz()">Reset</button>
                 </div>
 
                 <div class="color-legend">
-                    <div class="legend-item"><span class="legend-dot" style="background: var(--lavender);"></span> sync (blue)</div>
-                    <div class="legend-item"><span class="legend-dot" style="background: var(--rose);"></span> async (red)</div>
+                    <div class="legend-item"><span class="legend-dot" style="background: var(--lavender);"></span> unchanged</div>
+                    <div class="legend-item"><span class="legend-dot" style="background: var(--rose);"></span> returns a promise</div>
                 </div>
             </div>
 
-            <p>Step by step: <code>db.query</code> now returns a <code>Promise</code>. <code>getMetrics</code> must await that promise, so <code>getMetrics</code> becomes async and now returns a promise of its own. <code>processData</code> must await <code>getMetrics</code>, which makes <code>processData</code> async. Finally, <code>renderDashboard</code> must await <code>processData</code>. Tests and mocks that call these functions may need to follow the same interface.</p>
 
-            <h4>Practical consequences</h4>
+            <p><code>processData</code> still takes an array and returns an array. It does not call <code>getMetrics</code>. The caller of <code>renderDashboard</code> now receives a promise too, so it must arrange to use the chart after resolution. It can use <code>await</code>, return the promise, or attach a callback.</p>
+            <p>Some interfaces make this awkward. A synchronous sort comparator cannot wait for a network request. One option is to fetch the sort keys first, then run the ordinary sort.</p>
+            <h2>A request and a handler</h2>
+            <p>In OCaml, <code>Effect.perform</code> suspends a computation and passes an operation to an enclosing handler. The handler receives a continuation, which represents the suspended computation. Calling <code>Effect.Deep.continue</code> resumes it with a value.</p>
+            <p>This example requests a list of integers. The handler supplies a fixed list, so no network service is needed:</p>
+<div class="code-block"><div class="code-label">OCaml 5: supply data through a handler</div><pre>type _ Effect.t += Read_metrics : int list Effect.t
 
-            <p>Beyond changing several function declarations, the sync/async distinction affects how code can be combined:</p>
+let get_metrics () = Effect.perform Read_metrics
 
-            <ul>
-                <li><code>[1,2,3].map(async x => await fetch(x))</code> returns <code>Promise[]</code>, not the resolved values, so it needs an additional <code>Promise.all</code>.</li>
-                <li>If a library expects a sync comparator <code>(a, b) => number</code>, you cannot implement it with async code. There's no workaround. I've hit this one in real life and the answer was "restructure everything."</li>
-                <li>The same change reaches tests. A synchronous mock may need to adopt the asynchronous interface even when it already has the result available.</li>
-            </ul>
+let process_data raw =
+  raw |&gt; List.filter (fun x -&gt; x &gt; 0)
+      |&gt; List.map (fun x -&gt; x * 2)
 
-            <h2>What OCaml 5 Did Instead</h2>
+let render_dashboard () =
+  get_metrics () |&gt; process_data
+                 |&gt; List.map string_of_int
+                 |&gt; String.concat &quot;, &quot;
 
-            <div class="callout-box">
-                <div class="callout-title">The Key Idea</div>
-                <p>Instead of baking side effects into a function's type, let the function <strong>declare what it needs</strong> (an effect) and let the <strong>caller decide how to provide it</strong> (a handler). The function doesn't know or care whether the effect is satisfied synchronously, asynchronously, or not at all.</p>
-            </div>
+let run_with_metrics metrics f =
+  Effect.Deep.try_with f ()
+    { effc = fun (type a) (eff : a Effect.t) -&gt;
+        match eff with
+        | Read_metrics -&gt;
+            Some (fun (k : (a, _) Effect.Deep.continuation) -&gt;
+              Effect.Deep.continue k metrics)
+        | _ -&gt; None }
 
-            <p>Here is a small example:</p>
-
-            <div class="code-block">
-                <div class="code-label"><span class="lang-dot" style="background: var(--orange);"></span> OCaml 5</div>
-<pre><span class="cmt">(* 1. Declare an effect — this is a "need" *)</span>
-<span class="kw">type</span> _ <span class="typ">Effect</span>.t += <span class="typ">Fetch</span> : <span class="typ">string</span> -> <span class="typ">string</span> <span class="typ">Effect</span>.t
-
-<span class="cmt">(* 2. Use it — looks completely normal *)</span>
-<span class="kw">let</span> <span class="fn">get_metrics</span> () =
-  <span class="fn">Effect</span>.perform (<span class="typ">Fetch</span> <span class="str">"https://api.example.com/metrics"</span>)
-
-<span class="kw">let</span> <span class="fn">process_data</span> raw =
-  raw |> <span class="fn">List</span>.filter valid |> <span class="fn">List</span>.map normalize
-
-<span class="kw">let</span> <span class="fn">render_dashboard</span> () =
-  <span class="kw">let</span> data = <span class="fn">process_data</span> (<span class="fn">get_metrics</span> ()) <span class="kw">in</span>
-  <span class="fn">format_chart</span> data</pre>
-            </div>
-
-            <p>No async, no await, no Promise. <code>get_metrics</code> looks like a regular function because it <em>is</em> one. The interesting part is the handler — the thing that decides what <code>Fetch</code> actually does:</p>
-
-            <div class="code-block">
-                <div class="code-label"><span class="lang-dot" style="background: var(--orange);"></span> OCaml 5 — The Handler</div>
-<pre><span class="cmt">(* 3. Handle the effect — the caller decides *)</span>
-<span class="kw">let</span> <span class="fn">run_with_http</span> f =
-  <span class="fn">Effect</span>.<span class="fn">Deep</span>.try_with f ()
-    { effc = <span class="kw">fun</span> (<span class="kw">type</span> a) (eff : a <span class="typ">Effect</span>.t) ->
-      <span class="kw">match</span> eff <span class="kw">with</span>
-      | <span class="typ">Fetch</span> url ->
-        <span class="typ">Some</span> (<span class="kw">fun</span> (k : (a, _) <span class="fn">Effect</span>.<span class="fn">Deep</span>.continuation) ->
-          <span class="kw">let</span> body = <span class="fn">Http</span>.get url <span class="kw">in</span>   <span class="cmt">(* do the actual I/O *)</span>
-          <span class="fn">Effect</span>.<span class="fn">Deep</span>.continue k body)   <span class="cmt">(* resume with result *)</span>
-      | _ -> <span class="typ">None</span> }
-
-<span class="cmt">(* Use it *)</span>
-<span class="kw">let</span> () = <span class="fn">run_with_http</span> render_dashboard</pre>
-            </div>
-
-            <p>The handler catches the <code>Fetch</code> effect, does the actual HTTP call, and <strong>resumes</strong> the original function with the result. The function that performed the effect never finds out any of this happened — from its point of view, it asked for a string and got a string.</p>
-
-            <h2>Step Through It: How Perform and Resume Work</h2>
-
-            <p>Here is the control flow step by step:</p>
-
+let () =
+  print_endline (run_with_metrics [0; 2; 3] render_dashboard)
+(* Prints: 4, 6 *)</pre></div>
+            <p><code>Read_metrics</code> is declared to return an <code>int list</code>. When the handler supplies <code>[0; 2; 3]</code>, execution resumes inside <code>get_metrics</code>. The remaining calls filter out zero, double the values, and format the result.</p>
             <!-- Interactive: Effect Handler Step-Through Simulator -->
             <div class="effect-sim" id="effectSim">
-                <div class="sim-title">⚡ Interactive: Effect Handler Simulator</div>
-                <div class="sim-desc">Step through how <code>perform</code> and <code>continue</code> bounce control between the function and the handler.</div>
+                <div class="sim-title">Follow the handler</div>
+                <div class="sim-desc">Step through a request, its handler, and the return to the calling function.</div>
 
                 <div class="sim-layout">
                     <div class="sim-panel">
                         <div class="sim-panel-title">Code</div>
                         <div id="simCode">
                             <div class="sim-line" data-step="0"><span class="kw">let</span> <span class="fn">render_dashboard</span> () =</div>
-                            <div class="sim-line" data-step="1">  <span class="kw">let</span> raw = <span class="fn">perform</span> (<span class="typ">Fetch</span> url) <span class="kw">in</span></div>
+                            <div class="sim-line" data-step="1">  <span class="kw">let</span> raw = <span class="fn">perform</span> <span class="typ">Read_metrics</span> <span class="kw">in</span></div>
                             <div class="sim-line" data-step="3">  <span class="kw">let</span> data = <span class="fn">process</span> raw <span class="kw">in</span></div>
                             <div class="sim-line" data-step="4">  <span class="fn">format</span> data</div>
                             <div class="sim-line" data-step="-1" style="margin-top: 12px;"><span class="cmt">(* handler *)</span></div>
-                            <div class="sim-line" data-step="2">| <span class="typ">Fetch</span> url → <span class="fn">continue</span> k (<span class="fn">http_get</span> url)</div>
+                            <div class="sim-line" data-step="2">| <span class="typ">Read_metrics</span> → <span class="fn">continue</span> k [0; 2; 3]</div>
                         </div>
                     </div>
                     <div class="sim-panel">
@@ -449,33 +406,18 @@
                 </div>
             </div>
 
-            <p>The thing to notice: <strong>the function's control flow stays linear.</strong> It hits <code>perform</code>, suspends, the handler runs, and then it <em>resumes exactly where it left off</em> with the value the handler provided. No callbacks, no <code>.then()</code>, no color change.</p>
 
-            <p>The mental model that finally stuck for me: it's a resumable exception. <code>perform</code> throws an effect upward, a handler catches it — but unlike an exception, the handler can hand a value back and let the original code keep going as if nothing happened.</p>
-
-            <h2>The Deeper Insight: Effects Are a Composition Primitive</h2>
-
-            <p>The same mechanism can express exceptions, state, nondeterminism, logging, and concurrency:</p>
-
-            <div class="code-block">
-                <div class="code-label"><span class="lang-dot" style="background: var(--orange);"></span> Effects beyond async</div>
-<pre><span class="cmt">(* State as an effect *)</span>
-<span class="kw">type</span> _ <span class="typ">Effect</span>.t += <span class="typ">Get</span> : <span class="typ">int</span> <span class="typ">Effect</span>.t
-<span class="kw">type</span> _ <span class="typ">Effect</span>.t += <span class="typ">Set</span> : <span class="typ">int</span> -> <span class="typ">unit</span> <span class="typ">Effect</span>.t
-
-<span class="cmt">(* Nondeterminism as an effect *)</span>
-<span class="kw">type</span> _ <span class="typ">Effect</span>.t += <span class="typ">Choose</span> : <span class="typ">bool</span> <span class="typ">Effect</span>.t
-
-<span class="cmt">(* A function that uses both — no framework needed *)</span>
-<span class="kw">let</span> <span class="fn">my_function</span> () =
-  <span class="kw">let</span> x = <span class="fn">perform</span> <span class="typ">Get</span> <span class="kw">in</span>
-  <span class="kw">if</span> <span class="fn">perform</span> <span class="typ">Choose</span> <span class="kw">then</span>
-    <span class="fn">perform</span> (<span class="typ">Set</span> (x + 1))
-  <span class="kw">else</span>
-    <span class="fn">perform</span> (<span class="typ">Set</span> (x * 2))</pre>
-            </div>
-
-            <p>A handler for <code>Choose</code> could explore both branches and collect every possible final state — a backtracking search in a few lines. Or flip a coin. Or ask the user. The function does not need to change.</p>
+            <h2>Where asynchronous I/O fits</h2>
+            <p>The example resumes immediately. An I/O scheduler can instead retain the continuation, run another task, and resume the first one when its data arrives. That scheduler still has to manage readiness, errors, and cancellation. Putting a blocking HTTP call inside a handler would still block.</p>
+            <p>OCaml does not track these effects in function types. A missing handler is therefore a runtime problem: an unhandled operation raises <code>Effect.Unhandled</code>. The visible function signature alone will not tell you every way the call can suspend.</p>
+            <p>There is also a restriction on the continuation: OCaml’s continuations are one-shot. Resuming the same one twice raises <code>Effect.Continuation_already_resumed</code>. A search algorithm cannot explore two branches simply by continuing the same captured computation twice.</p>
+            <p>In this example, the handler lets the data source change while the processing functions keep the same interfaces. Whether that is worth using depends on the surrounding program: its scheduler and error handling still need to be understood.</p>
+            <h2>References</h2>
+            <ul>
+              <li><a href="https://ocaml.org/manual/5.3/effects.html">OCaml manual: effect handlers</a>, including concurrency and continuation semantics.</li>
+              <li><a href="https://github.com/ocaml-multicore/ocaml-effects-tutorial">OCaml effects tutorial</a>, with examples that build schedulers.</li>
+              <li><a href="https://journal.stuffwithstuff.com/2015/02/01/what-color-is-your-function/">Bob Nystrom: What Color is Your Function?</a> (2015).</li>
+            </ul>
 
         </div>
     </div>
@@ -511,9 +453,9 @@
     /* ========== COLOR INFECTION VISUALIZER ========== */
     var infectionStep = 0;
     var infectionTimer = null;
-    var frames = ['frame-1', 'frame-2', 'frame-3', 'frame-4'];
-    var frameNames = ['db.query()', 'getMetrics()', 'processData()', 'renderDashboard()'];
-    var asyncNames = ['async db.query()', 'async getMetrics()', 'async processData()', 'async renderDashboard()'];
+    var frames = ['frame-1', 'frame-2', 'frame-4'];
+    var frameNames = ['db.query()', 'getMetrics()', 'renderDashboard()'];
+    var asyncNames = ['db.query() → Promise', 'getMetrics() → Promise (same code)', 'async renderDashboard()'];
 
     function infectStack() {
         if (infectionStep > 0) return;
@@ -547,24 +489,15 @@
 
     /* ========== EFFECT HANDLER SIMULATOR ========== */
     var simStep = -1;
+    var simTimer = null;
     var simSteps = [
         { line: 0, log: '<span class="log-arrow">→</span> entering <span class="log-result">render_dashboard</span>', type: 'enter' },
-        { line: 1, log: '<span class="log-perform">⚡ perform</span> Fetch url — <em>function suspends here</em>', type: 'perform' },
-        { line: 5, log: '<span class="log-handle">⬆ handler catches</span> Fetch → calls http_get(url)', type: 'handle' },
-        { line: 2, log: '<span class="log-resume">⬇ continue k</span> with response — <em>function resumes</em>', type: 'resume' },
+        { line: 1, log: '<span class="log-perform">⚡ perform</span> Read_metrics — <em>function suspends here</em>', type: 'perform' },
+        { line: 5, log: '<span class="log-handle">⬆ handler catches</span> Read_metrics → supplies [0; 2; 3]', type: 'handle' },
+        { line: 2, log: '<span class="log-resume">⬇ continue k</span> with [0; 2; 3] — <em>function resumes</em>', type: 'resume' },
         { line: 3, log: '<span class="log-arrow">→</span> process raw data (pure computation)', type: 'compute' },
         { line: 4, log: '<span class="log-arrow">→</span> format data → <span class="log-result">done ✓</span>', type: 'done' }
     ];
-    // Map step indices to data-step values for highlighting
-    var simLineMap = [0, 1, -1, 3, 3, 4]; // which data-step to highlight at each simStep
-    // Actually let me map properly:
-    // simStep 0 -> data-step="0" (let render_dashboard)
-    // simStep 1 -> data-step="1" (let raw = perform)
-    // simStep 2 -> data-step="2" (handler line: | Fetch url →)
-    // simStep 3 -> data-step="3" (let data = process raw) -- resume point
-    // simStep 4 -> data-step="3" (let data = process raw)
-    // simStep 5 -> data-step="4" (format data)
-
     function highlightSimLine(stepIdx) {
         var dataSteps = [0, 1, 2, 3, 3, 4]; // which data-step for each simStep
         var targetStep = dataSteps[stepIdx];
@@ -595,6 +528,7 @@
     }
 
     function resetSim() {
+        clearInterval(simTimer);
         simStep = -1;
         document.getElementById('simLog').innerHTML = '';
         document.querySelectorAll('#simCode .sim-line').forEach(function (el) {
@@ -606,11 +540,12 @@
 
     function autoPlay() {
         resetSim();
-        var interval = setInterval(function () {
+        simTimer = setInterval(function () {
             stepSim();
-            if (simStep >= simSteps.length - 1) clearInterval(interval);
+            if (simStep >= simSteps.length - 1) clearInterval(simTimer);
         }, 900);
     }
     </script>
 </body>
 </html>
+

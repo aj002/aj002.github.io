@@ -5,9 +5,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>The Kelly Criterion | Aastha Jain</title>
+    <title>Kelly sizing when your probability is wrong | Aastha Jain</title>
     <meta name="author" content="Aastha Jain">
-    <meta name="description" content="A practical note on the Kelly criterion, compound growth, estimation error, and why traders often use a fraction of its answer.">
+    <meta name="description" content="What a five-point error in the win probability does to a Kelly-sized bet.">
     <link rel="stylesheet" href="../assets/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdbootstrap@4.20.0/css/mdb.min.css"
         integrity="sha256-jpjYvU3G3N6nrrBwXJoVEYI/0zw8htfFnhT9ljN3JJw=" crossorigin="anonymous">
@@ -144,6 +144,8 @@
             padding: 36px 24px; text-align: center;
         }
         .custom-footer .footer-text { font-size: 0.78rem; color: var(--text-muted); }
+            .post-body th, .post-body td { padding: 12px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+        .post-body pre { overflow-x:auto; font-size:.85rem; }
     </style>
 </head>
 <body class="fixed-top-nav">
@@ -179,212 +181,62 @@
         <div class="post-meta-bar">
             <a href="../blog/">← back to writing</a>
             <span>·</span>
-            <span>December 2025</span>
+            <span>December 2025 · revised November 2026</span>
         </div>
 
-        <h1 class="post-title">How I Think About the Kelly Criterion</h1>
-        <p class="post-subtitle">A useful answer to a narrow question: if you have an edge, how much risk should you take without overbetting it?</p>
+        <h1 class="post-title">Kelly sizing when your probability is wrong</h1>
+        <p class="post-subtitle">What a five-point error in the win probability does to a Kelly-sized bet.</p>
 
         <div class="post-body">
+            <p>Suppose a coin pays even money and lands heads 60% of the time. Kelly gives a bet of 20% of the current bankroll. Now suppose 60% was an estimate, and the true probability is 55%. The growth-optimal bet is only 10%. That five-point error has doubled the stake.</p>
+            <p>The calculation is short enough to check directly.</p>
 
-            <p>I first encountered Kelly as a position-sizing rule: estimate your edge, divide by the payoff, and the formula tells you what fraction of capital to risk. That version is useful, but it hides both the interesting part and the reason I would rarely use the full answer in practice.</p>
-
-            <p>The original result came from John L. Kelly Jr. at Bell Labs. His 1956 paper, <em>"A New Interpretation of Information Rate,"</em> studied a gambler receiving imperfect information through a noisy channel. The question was not simply whether the gambler had an edge, but how aggressively to use it when wealth compounds over repeated bets.</p>
-
-            <p>That distinction matters in trading. A positive expected return does not make every position size sensible. Kelly gives a clean benchmark for the size that maximizes long-run logarithmic growth under a particular model. The assumptions in that sentence do a lot of work, so I want to keep them visible.</p>
-
-            <hr>
-
-            <h2>The Setup: A Gambler with a Private Wire</h2>
-
-            <p>Kelly's paper posed a specific problem. Imagine a gambler who receives information about horse races through a <strong>noisy private channel</strong> — think of an insider tip that's correct, say, 70% of the time. The gambler knows the channel is noisy. The question: <strong>how much of their bankroll should they bet on each race to maximize long-term wealth?</strong></p>
-
-            <p>A few intuitive policies illustrate the trade-off:</p>
-
-            <ul>
-                <li><strong>Bet everything when you have an edge:</strong> one loss ends the game.</li>
-                <li><strong>Bet a fixed small amount:</strong> limits damage, but ignores changes in bankroll and edge.</li>
-                <li><strong>Bet proportionally to your edge:</strong> points in the right direction, but still needs a precise rule.</li>
-            </ul>
-
-            <p>Kelly derived that rule and connected the resulting growth rate to Shannon's information theory under the betting setup in his paper.</p>
-
-            <h2>The Formula</h2>
-
-            <p>For a simple bet where you either win or lose, the Kelly criterion says:</p>
-
+            <h2>The bet</h2>
+            <p>Let <code>f</code> be the fraction of the bankroll staked on heads. A win multiplies wealth by <code>1 + f</code>; a loss multiplies it by <code>1 − f</code>. Assume independent rounds with an unchanged win probability <code>p</code>, no fees, and a stake between zero and the whole bankroll.</p>
             <div class="formula-box">
-                <div class="formula-label">The Kelly Fraction</div>
-                <div class="formula">f* = (bp − q) / b</div>
-                <div class="formula-note">
-                    <strong>f*</strong> = fraction of your bankroll to bet<br>
-                    <strong>b</strong> = net odds (e.g., b = 1 for even money, b = 2 for 2-to-1)<br>
-                    <strong>p</strong> = probability of winning<br>
-                    <strong>q</strong> = 1 − p = probability of losing
-                </div>
+                <div class="formula-label">Expected log growth per round</div>
+                <div class="formula">G(f; p) = p ln(1 + f) + (1 − p) ln(1 − f)</div>
             </div>
-
-            <p>For even-money bets (b = 1), this simplifies to:</p>
-
+            <p>Logarithms let us add the changes across rounds. Under these assumptions, the average log return converges to <code>G</code> as the number of rounds grows. Differentiating with respect to <code>f</code> gives:</p>
             <div class="formula-box">
-                <div class="formula-label">Even-money Kelly</div>
-                <div class="formula">f* = 2p − 1</div>
-                <div class="formula-note">
-                    If you have a 60% chance of winning an even-money bet, Kelly says bet 20% of your bankroll.<br>
-                    If you have a 55% edge, bet 10%. If you have a 51% edge, bet 2%.<br>
-                    If you have no edge (p = 0.5), bet zero.
-                </div>
+                <div class="formula">p / (1 + f) − (1 − p) / (1 − f) = 0</div>
+                <div class="formula-note">So f* = 2p − 1. If p ≤ 0.5, the best permitted stake on heads is zero.</div>
             </div>
+            <p>With known <code>p = 0.60</code>, the optimum is <code>f = 0.20</code>. Ten per cent is half Kelly. Forty per cent is double Kelly.</p>
 
-            <p>This can be stated even more intuitively: <strong>f* = edge / odds.</strong> Your bet size should be proportional to your edge and inversely proportional to the odds. The bigger your informational advantage, the more you bet. The larger the potential loss, the less you bet.</p>
+            <h2>Change the probability, keep the stake</h2>
+            <p>Each entry below is expected log growth per round, using natural logarithms. The stake stays fixed while the true win probability changes.</p>
+            <div style="overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse;text-align:left" aria-label="Expected log growth for different stakes and true win probabilities">
+              <thead><tr><th scope="col">True p</th><th scope="col">10% stake</th><th scope="col">20% stake</th><th scope="col">40% stake</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">60%</th><td>0.015042</td><td>0.020136</td><td>−0.002447</td></tr>
+                <tr><th scope="row">55%</th><td>0.005008</td><td>−0.000138</td><td>−0.044812</td></tr>
+                <tr><th scope="row">50%</th><td>−0.005025</td><td>−0.020411</td><td>−0.087177</td></tr>
+              </tbody>
+            </table>
+            </div>
+            <p>At 60%, the 20% stake has the highest growth of the three. At 55%, it has slightly negative expected log growth, despite the coin still favouring heads. The 10% stake is now the optimum. At 50%, every positive stake in the table has negative log growth.</p>
+            <p>Also: double Kelly does not give exactly zero growth here. At a 60% win probability and a 40% stake, <code>G = −0.002447</code>. The zero-at-double-Kelly rule comes from a quadratic approximation; it is not an exact result for this coin.</p>
 
-            <h2>Why Logarithms? The Math of Compounding</h2>
-
-            <p>The derivation reveals why Kelly works. The key insight is that <strong>wealth grows multiplicatively, not additively.</strong></p>
-
-            <p>If you start with bankroll \(W\) and make \(n\) bets, each wagering fraction \(f\), your wealth after \(n\) bets is:</p>
-
+            <h2>How much accuracy does the bet need?</h2>
+            <p>For a fixed stake, we can solve <code>G(f; p) = 0</code> for the break-even win probability:</p>
             <div class="formula-box">
-                <div class="formula-label">Multiplicative wealth growth</div>
-                <div class="formula">W<sub>n</sub> = W<sub>0</sub> × (1 + bf)<sup>wins</sup> × (1 − f)<sup>losses</sup></div>
+                <div class="formula">p<sub>break-even</sub> = −ln(1 − f) / [ln(1 + f) − ln(1 − f)]</div>
             </div>
+            <p>A 20% stake needs a true win probability above about <strong>55.034%</strong> for positive expected log growth. A 10% stake needs about <strong>52.504%</strong>. Halving the stake lowers that threshold by about 2.5 percentage points.</p>
+            <p>These are statements about repeated log growth. They do not promise a profit over a fixed number of rounds. A strategy with positive expected log growth can still have a bad run, and a coin with no edge still has negative expected log growth at every positive stake.</p>
+            <p>Before using a Kelly fraction, I’d want to see this calculation over a range of plausible probabilities. A single estimate of <code>p</code> hides how close the chosen stake is to negative growth.</p>
 
-            <p>Taking the logarithm converts multiplication to addition:</p>
+            <h2>Source and calculation</h2>
+            <p>J. L. Kelly Jr., <a href="https://doi.org/10.1002/j.1538-7305.1956.tb03809.x">A New Interpretation of Information Rate</a> (1956). The table above is a direct evaluation of the even-money formula, not a backtest.</p>
+            <div class="code-block"><pre>from math import log1p
 
-            <div class="formula-box">
-                <div class="formula-label">Log growth rate</div>
-                <div class="formula">G(f) = p · log(1 + bf) + q · log(1 − f)</div>
-                <div class="formula-note">
-                    By the law of large numbers, this converges to your long-run growth rate.<br>
-                    Kelly maximizes G(f) by taking the derivative, setting it to zero, and solving for f.
-                </div>
-            </div>
+def growth(p, f):
+    return p * log1p(f) + (1 - p) * log1p(-f)
 
-            <p>Setting G'(f) = 0:</p>
-
-            <div class="formula-box">
-                <div class="formula-label">Derivation</div>
-                <div class="formula">pb / (1 + bf) − q / (1 − f) = 0</div>
-                <div class="formula-note">
-                    Rearranging: pb(1 − f) = q(1 + bf)<br>
-                    → pb − pbf = q + qbf → pb − q = fb(p + q) = fb<br>
-                    → <strong>f* = (bp − q) / b</strong>
-                </div>
-            </div>
-
-            <p>The useful feature is that <strong>the growth-rate function G(f) is concave.</strong> There is a single maximum. Betting less than f* sacrifices some modeled growth; betting more also lowers growth while increasing drawdowns. In the even-money example below, 2× Kelly brings expected log growth back to zero. The exact boundary depends on the bet.</p>
-
-            <blockquote><p>Having an edge and sizing it well are separate problems. Beyond the growth-optimal size, taking more risk can reduce long-run compound growth.</p></blockquote>
-
-            <h2>The Information Theory Connection</h2>
-
-            <p>The information-theory connection is what makes the original paper more than a position-sizing exercise.</p>
-
-            <p>In Kelly's idealized setup, with fair odds matched to the underlying outcomes, the advantage in optimal log-growth from side information is tied to the information carried by the channel. This is a result about that model, not a general identity between bits and investment returns.</p>
-
-            <div class="callout-box">
-                <div class="callout-title">The value of side information</div>
-                <p>Under fair odds and Kelly's repeated-betting assumptions, the increase in optimal expected log growth from observing a signal <strong>Y</strong> about outcome <strong>X</strong> is:</p>
-                <p style="text-align:center; font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--text-primary); margin: 12px 0;"><strong>ΔG* = I(X;Y)</strong></p>
-                <p>Here <strong>I(X;Y)</strong> is mutual information. Channel capacity is the largest value this information rate can attain over the allowed input distributions.</p>
-            </div>
-
-            <p>Within that setup:</p>
-
-            <ul>
-                <li>An uninformative signal adds no growth advantage.</li>
-                <li>A more informative signal can support a larger advantage, provided the bettor uses it correctly.</li>
-                <li>The result measures the value of the signal relative to betting without it; it does not say that every financial return can be read directly in bits.</li>
-            </ul>
-
-            <p>I like this connection because it separates confidence from information. The formula only responds to the edge supplied to it; it has no way to reward conviction. In markets, of course, estimating that edge is the difficult part.</p>
-
-            <h2>A Concrete Example</h2>
-
-            <div class="example-box">
-                <div class="example-title">The biased coin</div>
-                <p>You're offered a game. A coin comes up heads 60% of the time. It pays even money. You start with $1,000. How should you bet?</p>
-                <p><strong>Kelly says:</strong> f* = 2(0.6) − 1 = <strong>0.20</strong>. Bet 20% of your current bankroll each round.</p>
-                <p><strong>If you bet 20% (Kelly):</strong> Expected log growth is G = 0.6·log(1.2) + 0.4·log(0.8) ≈ 0.020 per bet. The corresponding long-run typical-growth projection doubles roughly every 35 bets and reaches about $150,000 after 250 bets. This is not the arithmetic expected bankroll.</p>
-                <p><strong>If you bet 40% (2× Kelly):</strong> G = 0.6·log(1.4) + 0.4·log(0.6) ≈ 0.000. Growth rate is <em>zero</em>. You go nowhere on average despite having a 60% edge. Your bankroll just random-walks.</p>
-                <p><strong>If you bet 10% (half Kelly):</strong> G ≈ 0.75 × G(f*). The modeled log-growth rate is lower, but so is the variability. The same typical-growth projection reaches roughly $43,000 after 250 bets.</p>
-                <p><strong>If you bet 100% (all-in):</strong> First tails and you have $0. Game over. Probability of surviving 100 rounds: 0.6<sup>100</sup> ≈ 6.5 × 10<sup>−23</sup>. Effectively zero.</p>
-            </div>
-
-            <p>In this particular even-money example, 2× Kelly is a useful warning. The bet still has positive expected profit in a one-period arithmetic sense, but betting 40% of the bankroll produces zero expected log growth. Repetition and compounding change the answer.</p>
-
-            <p>This is the difference between <strong>additive</strong> and <strong>multiplicative</strong> thinking. A stake that looks acceptable in isolation can be too large for a repeated compounding process.</p>
-
-            <h2>Kelly in the Continuous World: The Portfolio Connection</h2>
-
-            <p>Under a simplified continuous-return model, the multi-asset Kelly solution takes a matrix form familiar from mean-variance portfolio theory:</p>
-
-            <div class="formula-box">
-                <div class="formula-label">Continuous Kelly (multi-asset)</div>
-                <div class="formula">f* = Σ<sup>−1</sup>(μ − r·𝟏)</div>
-                <div class="formula-note">
-                    <strong>Σ<sup>−1</sup></strong> = inverse covariance matrix of asset returns<br>
-                    <strong>μ</strong> = vector of expected returns<br>
-                    <strong>r</strong> = risk-free rate<br>
-                    Under these assumptions, this has the same direction as the <strong>Markowitz tangency portfolio</strong>, with leverage determined by log-growth.
-                </div>
-            </div>
-
-            <p>Under the model assumptions, three related formulations line up:</p>
-            <ol>
-                <li><strong>Kelly</strong>: "Maximize my long-run geometric growth rate"</li>
-                <li><strong>Markowitz</strong>: "Maximize expected return for a given level of risk"</li>
-                <li><strong>Log utility</strong>: "Maximize my expected logarithmic utility of wealth"</li>
-            </ol>
-            <p>At the corresponding parameterization, they produce the same portfolio weights. That equivalence is useful, but it depends on the return model and does not hold unchanged for arbitrary distributions or constraints.</p>
-
-            <h2>The Fractional Kelly Tradeoff</h2>
-
-            <p>Full Kelly maximizes modeled long-run log growth, but it can produce drawdowns that many investors cannot or should not tolerate. The exact drawdown distribution depends on the strategy; Kelly optimality does not make the path comfortable.</p>
-
-            <p>This is why Kelly is often used fractionally: take some fraction α of the model's full-Kelly amount. In the simple approximation used here, the trade-off is:</p>
-
-            <div class="callout-box">
-                <div class="callout-title">A fractional Kelly approximation</div>
-                <p>In the continuous-return quadratic model, betting fraction <strong>α</strong> of the Kelly amount gives:</p>
-                <p style="text-align:center; font-family: 'JetBrains Mono', monospace; font-size: 1rem; color: var(--text-primary); margin: 10px 0;"><strong>G(αf*) = α(2 − α) · G(f*)</strong></p>
-                <p><strong>Half Kelly (α = 0.5):</strong> The model retains 75% of full-Kelly growth while return variance scales to roughly one quarter.</p>
-                <p><strong>Quarter Kelly (α = 0.25):</strong> The model retains 43.75% of full-Kelly growth with still less variability.</p>
-            </div>
-
-            <p>The practical reasons for fractional Kelly are compelling:</p>
-            <ul>
-                <li><strong>Estimation error:</strong> You never know your true edge. If you overestimate it, nominal full Kelly becomes over-Kelly. A fraction provides room for error.</li>
-                <li><strong>Non-stationarity:</strong> Markets change. An edge that existed yesterday may not exist tomorrow. Fractional Kelly makes you more robust to regime changes.</li>
-                <li><strong>Finite horizons:</strong> Kelly's strongest growth claims are long-run results. Over a finite horizon, the path and terminal-risk objective matter.</li>
-                <li><strong>Practical tolerance:</strong> A mathematically admissible drawdown may still violate an investor's mandate, liquidity needs, or ability to continue trading.</li>
-            </ul>
-
-            <h2>What I Take From It</h2>
-
-            <p>The formula is compact. The useful habits around it are not:</p>
-
-            <ol>
-                <li><strong>An edge estimate comes before a sizing rule.</strong> Kelly cannot rescue an inaccurate probability model.</li>
-                <li><strong>Selection and sizing are different skills.</strong> A good trade can still be a bad portfolio decision at the wrong size.</li>
-                <li><strong>Overbetting is costly.</strong> Near the optimum, giving up some modeled growth can buy a meaningful reduction in risk; going above it moves in the opposite direction.</li>
-                <li><strong>Compounding is multiplicative.</strong> Arithmetic averages can obscure the effect of volatility and drawdowns on terminal wealth.</li>
-            </ol>
-
-            <p>I still like Kelly because it turns a vague instruction—"bet more when the edge is better"—into a precise optimization problem. I trust the full numerical answer much less than I trust the questions it forces me to ask.</p>
-
-            <hr>
-
-            <h4>Further Reading</h4>
-            <ul>
-                <li>Kelly, J.L. (1956). <em>"A New Interpretation of Information Rate."</em> Bell System Technical Journal, 35(4), 917–926.</li>
-                <li>Thorp, E.O. (2006). <em>"The Kelly Criterion in Blackjack, Sports Betting, and the Stock Market."</em> Handbook of Asset and Liability Management.</li>
-                <li>Thorp, E.O. (2017). <em>A Man for All Markets.</em> Random House. — Thorp's autobiography; highly recommended.</li>
-                <li>Poundstone, W. (2005). <em>Fortune's Formula.</em> Hill & Wang. — The full history of Kelly, Shannon, and Thorp; reads like a thriller.</li>
-                <li>Samuelson, P.A. (1979). <em>"Why We Should Not Make Mean Log of Wealth Big Though Years to Act Are Long."</em> Journal of Banking & Finance.</li>
-                <li>Cover, T.M. & Thomas, J.A. (2006). <em>Elements of Information Theory</em>, Ch. 6 & 16. — Rigorous treatment of the Kelly-Shannon connection.</li>
-                <li>MacLean, L.C., Thorp, E.O., & Ziemba, W.T. (2011). <em>The Kelly Capital Growth Investment Criterion.</em> World Scientific. — The definitive academic collection.</li>
-            </ul>
+for p in (0.60, 0.55, 0.50):
+    print(p, [round(growth(p, f), 6) for f in (0.10, 0.20, 0.40)])</pre></div>
 
         </div>
     </div>
@@ -418,3 +270,4 @@
 
 </body>
 </html>
+
